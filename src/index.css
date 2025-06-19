@@ -1,4 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Rye&family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'Riders of the Wild West';
+  src: url('/fonts/Riders of the Wild West.woff2') format('woff2'),
+       url('/fonts/Riders of the Wild West.woff') format('woff'),
+       url('/fonts/Riders of the Wild West.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}

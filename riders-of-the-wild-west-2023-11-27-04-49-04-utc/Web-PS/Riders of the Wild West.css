@@ -1,0 +1,9 @@
+/* Webfont: RidersoftheWildWest-Regular */@font-face {
+    font-family: 'RidersoftheWildWest';
+    src: url('Riders of the Wild West.woff2') format('woff2'), /* Modern Browsers */
+         url('Riders of the Wild West.otf') format('opentype'); /* Safari, Android, iOS */
+             font-style: normal;
+    font-weight: normal;
+    text-rendering: optimizeLegibility;
+}
+

@@ -14,7 +14,7 @@ export default {
         'country-dark': '#654321',
       },
       fontFamily: {
-        'western': ['Rye', 'serif'],
+        'western': ['Riders of the Wild West', 'serif'],
         'bebas': ['Bebas Neue', 'sans-serif'],
       },
     },
