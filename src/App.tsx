@@ -13,14 +13,9 @@ function App() {
     <div className="min-h-screen bg-gradient-to-b from-country-cream via-country-tan to-country-orange">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <img src="/icons/046-tumbleweed.png" className="absolute top-10 left-10 w-16 animate-bounce" alt="" />
-          <img src="/icons/001-cactus.png" className="absolute bottom-10 right-10 w-20" alt="" />
-          <img src="/icons/013-horseshoe.png" className="absolute top-20 right-20 w-16 animate-pulse" alt="" />
-        </div>
         
         <div className="container mx-auto px-4 pt-12 pb-20 text-center relative z-10">
-          <img src={logo} alt="Country Days" className="mx-auto mb-8 w-48 md:w-64" />
+          <img src={logo} alt="Country Days" className="mx-auto mb-4 w-64 md:w-80 lg:w-96" />
           
           <h1 className="font-western text-4xl md:text-6xl lg:text-7xl text-country-dark mb-4">
             COUNTRY DAYS
@@ -34,10 +29,8 @@ function App() {
             Get your boots on, hats ready, and voices warmed up – it's time to party country-style!
           </p>
           
-          <button className="bg-country-orange hover:bg-country-brown text-white font-bold py-4 px-8 rounded-lg text-xl transition-colors duration-300 flex items-center gap-3 mx-auto shadow-lg">
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-            </svg>
+          <button className="bg-country-orange hover:bg-country-brown text-white font-bold py-4 px-8 rounded-lg text-xl transition-colors duration-300 flex items-center gap-2 mx-auto shadow-lg">
+            <span className="text-2xl">⭐</span>
             View Events
           </button>
         </div>
@@ -85,7 +78,7 @@ function App() {
             <div className="flex flex-wrap justify-center gap-3">
               {artists.map((artist, idx) => (
                 <span key={idx} className="bg-country-orange text-white px-4 py-2 rounded-full font-bebas text-lg hover:bg-country-brown transition-colors">
-                  {artist}
+                  ⭐ {artist}
                 </span>
               ))}
               <span className="bg-country-dark text-white px-4 py-2 rounded-full font-bebas text-lg">
