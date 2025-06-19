@@ -185,7 +185,7 @@ function App() {
               { icon: "/icons/007-hat.png", title: "Nonstop Country Hits", desc: "From Morgan Wallen to Dolly Parton, Luke Combs to Shania Twain" },
               { icon: "/icons/020-boot.png", title: "Boot Scootin' Line Dancing", desc: "Led by pro instructors to keep the floor moving" },
               { icon: "/icons/033-whiskey.png", title: "Top Country DJs", desc: "Spinning the biggest anthems from the heart of Tennessee to today's hottest hits" },
-              { icon: "/icons/046-tumbleweed.png", title: "Country-Themed Merch", desc: "Grab your gear and dress the part" },
+              { icon: "/icons/044-poncho.png", title: "Country-Themed Merch", desc: "Grab your gear and dress the part" },
               { icon: "/icons/001-cactus.png", title: "Immersive Club Decor", desc: "Bringing Southern charm to the dancefloor" },
               { icon: "/icons/013-horseshoe.png", title: "Perfect for Parties", desc: "Hen dos, birthdays, stag celebrations or just a wild day out with friends" }
             ].map((item, idx) => (
