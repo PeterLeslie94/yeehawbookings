@@ -23,7 +23,7 @@ function App() {
           <img src={logo} alt="Country Days" className="mx-auto mb-8 w-48 md:w-64" />
           
           <h1 className="font-western text-4xl md:text-6xl lg:text-7xl text-country-dark mb-4">
-            🤠 COUNTRY DAYS 🌵
+            COUNTRY DAYS
           </h1>
           
           <p className="text-xl md:text-2xl font-bebas text-country-brown mb-6">
@@ -34,14 +34,12 @@ function App() {
             Get your boots on, hats ready, and voices warmed up – it's time to party country-style!
           </p>
           
-          <div className="bg-white/80 backdrop-blur rounded-lg shadow-xl p-6 md:p-8 max-w-4xl mx-auto border-4 border-country-brown">
-            <p className="text-gray-800 mb-6">
-              Join us for <span className="font-bold text-country-orange">Country Days</span>, a one-of-a-kind daytime celebration 
-              of modern and classic country music – where Nashville meets nightclub! From <span className="font-bold">live singers</span> and 
-              <span className="font-bold"> line dance instructors</span> to <span className="font-bold">top country DJs</span>, 
-              themed decor, and exclusive <span className="font-bold">country merch</span>, this is the full Wild West party experience!
-            </p>
-          </div>
+          <button className="bg-country-orange hover:bg-country-brown text-white font-bold py-4 px-8 rounded-lg text-xl transition-colors duration-300 flex items-center gap-3 mx-auto shadow-lg">
+            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+            View Events
+          </button>
         </div>
       </section>
 
@@ -49,20 +47,20 @@ function App() {
       <section className="py-16 bg-country-dark/10">
         <div className="container mx-auto px-4">
           <h2 className="font-western text-3xl md:text-5xl text-center text-country-dark mb-12">
-            🎤 What to Expect
+            What to Expect
           </h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {[
-              { icon: "🎶", title: "Nonstop Country Hits", desc: "from Morgan Wallen to Dolly Parton, Luke Combs to Shania Twain" },
-              { icon: "👢", title: "Boot Scootin' Line Dancing", desc: "led by pro instructors to keep the floor moving" },
-              { icon: "🎧", title: "Top Country DJs", desc: "spinning the biggest anthems from the heart of Tennessee to today's hottest hits" },
-              { icon: "🛍️", title: "Country-Themed Merch", desc: "grab your gear and dress the part" },
-              { icon: "🌵", title: "Immersive Club Decor", desc: "bringing Southern charm to the dancefloor" },
-              { icon: "🎉", title: "Perfect for Parties", desc: "hen dos, birthdays, stag celebrations or just a wild day out with friends" }
+              { icon: "/icons/007-hat.png", title: "Nonstop Country Hits", desc: "from Morgan Wallen to Dolly Parton, Luke Combs to Shania Twain" },
+              { icon: "/icons/020-boot.png", title: "Boot Scootin' Line Dancing", desc: "led by pro instructors to keep the floor moving" },
+              { icon: "/icons/033-whiskey.png", title: "Top Country DJs", desc: "spinning the biggest anthems from the heart of Tennessee to today's hottest hits" },
+              { icon: "/icons/003-sheriff badge.png", title: "Country-Themed Merch", desc: "grab your gear and dress the part" },
+              { icon: "/icons/001-cactus.png", title: "Immersive Club Decor", desc: "bringing Southern charm to the dancefloor" },
+              { icon: "/icons/013-horseshoe.png", title: "Perfect for Parties", desc: "hen dos, birthdays, stag celebrations or just a wild day out with friends" }
             ].map((item, idx) => (
               <div key={idx} className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform border-2 border-country-orange">
-                <div className="text-4xl mb-3">{item.icon}</div>
+                <img src={item.icon} alt="" className="w-12 h-12 mb-3" />
                 <h3 className="font-bebas text-2xl text-country-brown mb-2">{item.title}</h3>
                 <p className="text-gray-700">{item.desc}</p>
               </div>
@@ -80,14 +78,14 @@ function App() {
         
         <div className="container mx-auto px-4 relative z-10">
           <h2 className="font-western text-3xl md:text-5xl text-center text-country-dark mb-12">
-            🎵 Expect to Hear Music From
+            Expect to Hear Music From
           </h2>
           
           <div className="bg-white/90 backdrop-blur rounded-xl shadow-2xl p-8 max-w-4xl mx-auto border-4 border-country-brown">
             <div className="flex flex-wrap justify-center gap-3">
               {artists.map((artist, idx) => (
                 <span key={idx} className="bg-country-orange text-white px-4 py-2 rounded-full font-bebas text-lg hover:bg-country-brown transition-colors">
-                  ⭐ {artist}
+                  {artist}
                 </span>
               ))}
               <span className="bg-country-dark text-white px-4 py-2 rounded-full font-bebas text-lg">
@@ -105,11 +103,11 @@ function App() {
             <img src={cowboy} alt="Cowboy" className="w-48 md:w-64" />
             <div className="text-center md:text-left">
               <p className="text-2xl md:text-3xl font-western text-country-dark mb-4">
-                🔞 Ages 18+ Only
+                Ages 18+ Only
               </p>
               <div className="bg-white/80 backdrop-blur rounded-lg p-6 shadow-xl border-4 border-country-orange">
                 <p className="text-lg text-gray-800 font-bold">
-                  ✨ Country Days is where the drinks flow, the dancefloor fills, and the songs never end. 
+                  Country Days is where the drinks flow, the dancefloor fills, and the songs never end. 
                   Whether you're a die-hard country fan or just in it for the good times – 
                   saddle up for the ultimate daytime hoedown!
                 </p>
