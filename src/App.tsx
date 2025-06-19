@@ -1,5 +1,6 @@
 import logo from './assets/logo.png'
 import cowboy from './assets/cowboy.png'
+import backgroundTexture from './assets/background-paper.webp'
 
 function App() {
   const artists = [
@@ -10,7 +11,15 @@ function App() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-country-cream via-country-tan to-country-orange">
+    <div 
+      className="min-h-screen bg-gradient-to-b from-country-cream via-country-tan to-country-orange relative"
+      style={{
+        backgroundImage: `url(${backgroundTexture})`,
+        backgroundBlendMode: 'multiply',
+        backgroundSize: 'cover',
+        backgroundAttachment: 'fixed'
+      }}
+    >
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         
