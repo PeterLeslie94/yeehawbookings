@@ -38,8 +38,48 @@ function App() {
     'Paisley': 'Viennas, Paisley'
   }
   
+  // Fallback events for when Contentful is not available
+  const fallbackEvents = [
+    {
+      id: '1',
+      title: 'Country Days Glasgow',
+      date: new Date('2025-02-15T14:30:00'),
+      city: 'Glasgow',
+      venue: 'Club Tropicana, Glasgow',
+      skiddleUrl: '',
+      image: eventImage
+    },
+    {
+      id: '2',
+      title: 'Country Days Edinburgh',
+      date: new Date('2025-02-22T14:30:00'),
+      city: 'Edinburgh',
+      venue: 'Club Tropicana, Edinburgh',
+      skiddleUrl: '',
+      image: eventImage
+    },
+    {
+      id: '3',
+      title: 'Country Days Aberdeen',
+      date: new Date('2025-03-01T14:30:00'),
+      city: 'Aberdeen',
+      venue: 'Aura, Aberdeen',
+      skiddleUrl: '',
+      image: eventImage
+    },
+    {
+      id: '4',
+      title: 'Country Days Dundee',
+      date: new Date('2025-03-08T14:30:00'),
+      city: 'Dundee',
+      venue: 'Fat Sams, Dundee',
+      skiddleUrl: '',
+      image: eventImage
+    }
+  ]
+  
   // Transform Contentful data to match our component structure
-  const events = contentfulEvents.map(event => {
+  const events = contentfulEvents.length > 0 ? contentfulEvents.map(event => {
     const city = event.fields.City
     const venue = cityVenueMap[city] || `${city} Venue`
     
@@ -54,7 +94,7 @@ function App() {
         ? `https:${event.fields.image.fields.file.url}` 
         : eventImage // Fallback to default image
     }
-  })
+  }) : (!loading && !error ? fallbackEvents : [])
 
   const filteredEvents = selectedCity === 'All Cities' 
     ? events 

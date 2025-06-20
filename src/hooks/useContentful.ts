@@ -10,11 +10,21 @@ export const useContentfulEvents = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
+        // Check if environment variables are set
+        if (!import.meta.env.VITE_CONTENTFUL_SPACE_ID || !import.meta.env.VITE_CONTENTFUL_ACCESS_TOKEN) {
+          console.warn('Contentful credentials not configured')
+          setEvents([])
+          setLoading(false)
+          return
+        }
+
         const response = await contentfulClient.getEntries({
           content_type: 'event',
           'fields.eventType': 'country-days',
           order: ['fields.date'],
         })
+        
+        console.log('Contentful response:', response.items.length, 'events found')
         
         // Type assertion since we know the structure
         const mappedEvents = response.items as unknown as IEvent[]
@@ -23,7 +33,7 @@ export const useContentfulEvents = () => {
         setLoading(false)
       } catch (err) {
         console.error('Error fetching events from Contentful:', err)
-        setError('Failed to load events')
+        setError('Failed to load events. Please check your connection.')
         setLoading(false)
       }
     }
