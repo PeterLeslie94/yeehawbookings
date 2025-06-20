@@ -80,16 +80,16 @@ function App() {
   
   // Transform Contentful data to match our component structure
   const events = contentfulEvents.length > 0 ? contentfulEvents.map(event => {
-    const city = event.fields.City
+    const city = event.fields.City || ''
     const venue = cityVenueMap[city] || `${city} Venue`
     
     return {
       id: event.sys.id,
-      title: event.fields.title,
+      title: event.fields.title || 'Country Days Event',
       date: new Date(event.fields.date),
       city: city,
       venue: venue,
-      skiddleUrl: event.fields.skiddleUrl,
+      skiddleUrl: event.fields.skiddleUrl || '',
       image: event.fields.image?.fields?.file?.url 
         ? `https:${event.fields.image.fields.file.url}` 
         : eventImage // Fallback to default image
@@ -190,9 +190,11 @@ function App() {
               <div key={event.id} className="bg-white/90 backdrop-blur rounded-lg overflow-hidden shadow-xl border-4 border-country-brown hover:transform hover:scale-105 transition-transform">
                 <div className="relative aspect-square">
                   <img src={event.image} alt={event.title} className="w-full h-full object-cover" loading="lazy" />
-                  <div className={`absolute top-4 right-4 ${cityColors[event.city]} text-white px-3 py-1 rounded-full font-bebas text-sm`}>
-                    {event.city.toUpperCase()}
-                  </div>
+                  {event.city && (
+                    <div className={`absolute top-4 right-4 ${cityColors[event.city] || 'bg-gray-600'} text-white px-3 py-1 rounded-full font-bebas text-sm`}>
+                      {event.city.toUpperCase()}
+                    </div>
+                  )}
                 </div>
                 <div className="p-6">
                   <h3 className="font-western text-xl text-country-dark mb-3">
