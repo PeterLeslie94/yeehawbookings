@@ -2,7 +2,7 @@ import logo from './assets/logo-optimized.png'
 import backgroundTexture from './assets/background-paper.webp'
 import pinkHat from './assets/cowboyhat-optimized.png'
 import sheriffBadge from './assets/sheriff-optimized.png'
-import yeehawImage from './assets/yeehaw.webp'
+import eventImage from './assets/event-image.jpeg'
 import { useState } from 'react'
 
 function App() {
@@ -32,7 +32,7 @@ function App() {
       date: new Date('2024-03-15T14:30:00'),
       city: "Glasgow",
       venue: "Club Tropicana Glasgow",
-      image: yeehawImage
+      image: eventImage
     },
     {
       id: 2,
@@ -40,7 +40,7 @@ function App() {
       date: new Date('2024-03-22T14:30:00'),
       city: "Edinburgh",
       venue: "Club Tropicana Edinburgh",
-      image: yeehawImage
+      image: eventImage
     },
     {
       id: 3,
@@ -48,7 +48,7 @@ function App() {
       date: new Date('2024-03-29T14:30:00'),
       city: "Aberdeen",
       venue: "Aura Aberdeen",
-      image: yeehawImage
+      image: eventImage
     },
     {
       id: 4,
@@ -56,7 +56,7 @@ function App() {
       date: new Date('2024-04-05T14:30:00'),
       city: "Dundee",
       venue: "Fat Sam's Dundee",
-      image: yeehawImage
+      image: eventImage
     }
   ]
 
@@ -200,13 +200,8 @@ function App() {
       </section>
 
       {/* Artists Section */}
-      <section className="py-16 relative">
-        <div className="absolute inset-0 opacity-5">
-          <img src="/icons/007-hat.png" className="absolute top-10 left-1/4 w-24" alt="" loading="lazy" />
-          <img src="/icons/020-boot.png" className="absolute bottom-10 right-1/4 w-20" alt="" loading="lazy" />
-        </div>
-        
-        <div className="container mx-auto px-4 relative z-10">
+      <section className="py-16">
+        <div className="container mx-auto px-4">
           <h2 className="font-western text-3xl md:text-5xl text-center text-country-dark mb-12">
             Expect to Hear Music From
           </h2>
