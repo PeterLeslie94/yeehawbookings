@@ -30,12 +30,13 @@ function App() {
   const { events: contentfulEvents, loading, error } = useContentfulEvents()
   
   // Map of cities to their venues
+  // Map cities to venues - handle case variations
   const cityVenueMap: Record<string, string> = {
-    'Aberdeen': 'Aura, Aberdeen',
-    'Dundee': 'Fat Sams, Dundee',
-    'Edinburgh': 'Club Tropicana, Edinburgh',
-    'Glasgow': 'Club Tropicana, Glasgow',
-    'Paisley': 'Viennas, Paisley'
+    'aberdeen': 'Aura, Aberdeen',
+    'dundee': 'Fat Sams, Dundee',
+    'edinburgh': 'Club Tropicana, Edinburgh',
+    'glasgow': 'Club Tropicana, Glasgow',
+    'paisley': 'Viennas, Paisley'
   }
   
   // Fallback events for when Contentful is not available
@@ -83,15 +84,14 @@ function App() {
     // Normalize city name - handle case sensitivity and whitespace
     const rawCity = event.fields.City || ''
     const city = rawCity.trim()
-    const venue = city ? (cityVenueMap[city] || 'Venue TBA') : 'Venue TBA'
-    
-    console.log('Event city:', { raw: rawCity, normalized: city, venue })
+    // Look up venue using lowercase city name
+    const venue = city ? (cityVenueMap[city.toLowerCase()] || 'Venue TBA') : 'Venue TBA'
     
     return {
       id: event.sys.id,
       title: event.fields.title || 'Country Days Event',
       date: new Date(event.fields.date),
-      city: city,
+      city: city, // Keep original case for display
       venue: venue,
       skiddleUrl: event.fields.skiddleUrl || '',
       image: event.fields.image?.fields?.file?.url 
@@ -103,9 +103,8 @@ function App() {
   const filteredEvents = selectedCity === 'All Cities' 
     ? events 
     : events.filter(event => {
-      const matches = event.city && event.city === selectedCity
-      console.log('Filtering:', { eventCity: event.city, selectedCity, matches })
-      return matches
+      // Case-insensitive comparison for filtering
+      return event.city && event.city.toLowerCase() === selectedCity.toLowerCase()
     })
 
   return (
