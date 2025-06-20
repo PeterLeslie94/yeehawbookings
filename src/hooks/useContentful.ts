@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import contentfulClient from '../lib/contentful'
-import { IEvent } from '../types/contentful'
+import type { IEvent } from '../types/contentful'
 
 export const useContentfulEvents = () => {
   const [events, setEvents] = useState<IEvent[]>([])
@@ -12,11 +12,14 @@ export const useContentfulEvents = () => {
       try {
         const response = await contentfulClient.getEntries({
           content_type: 'event',
-          'fields.eventType': 'country-days', // Filter for country-days events only
-          order: 'fields.date',
+          'fields.eventType': 'country-days',
+          order: ['fields.date'],
         })
         
-        setEvents(response.items as IEvent[])
+        // Type assertion since we know the structure
+        const mappedEvents = response.items as unknown as IEvent[]
+        
+        setEvents(mappedEvents)
         setLoading(false)
       } catch (err) {
         console.error('Error fetching events from Contentful:', err)
