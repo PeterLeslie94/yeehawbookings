@@ -81,7 +81,7 @@ function App() {
   // Transform Contentful data to match our component structure
   const events = contentfulEvents.length > 0 ? contentfulEvents.map(event => {
     const city = event.fields.City || ''
-    const venue = cityVenueMap[city] || `${city} Venue`
+    const venue = city ? (cityVenueMap[city] || 'Venue TBA') : 'Venue TBA'
     
     return {
       id: event.sys.id,
@@ -98,7 +98,7 @@ function App() {
 
   const filteredEvents = selectedCity === 'All Cities' 
     ? events 
-    : events.filter(event => event.city === selectedCity)
+    : events.filter(event => event.city && event.city === selectedCity)
 
   return (
     <div className="min-h-screen relative">
