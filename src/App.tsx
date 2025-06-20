@@ -100,11 +100,24 @@ function App() {
     }
   }) : (!loading && !error ? fallbackEvents : [])
 
+  // Debug: Log all event cities
+  console.log('All event cities:', events.map(e => ({ city: e.city, title: e.title })))
+  console.log('Selected city:', selectedCity)
+  
   const filteredEvents = selectedCity === 'All Cities' 
     ? events 
     : events.filter(event => {
       // Case-insensitive comparison for filtering
-      return event.city && event.city.toLowerCase() === selectedCity.toLowerCase()
+      const matches = event.city && event.city.toLowerCase() === selectedCity.toLowerCase()
+      if (selectedCity === 'Dundee') {
+        console.log('Dundee filter check:', { 
+          eventCity: event.city, 
+          eventCityLower: event.city?.toLowerCase(), 
+          selectedCityLower: selectedCity.toLowerCase(), 
+          matches 
+        })
+      }
+      return matches
     })
 
   return (
