@@ -289,6 +289,73 @@ function App() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="font-western text-3xl md:text-5xl text-center text-country-dark mb-12">
+            FAQ'S
+          </h2>
+          
+          <div className="bg-white/90 backdrop-blur rounded-xl shadow-2xl p-8 max-w-4xl mx-auto border-4 border-country-brown">
+            <div className="space-y-6">
+              {[
+                {
+                  question: "Why do the tickets come in different price tiers?",
+                  answer: "Whilst there is no physical difference. There is only a limited amount of tickets we can sell. Therefore we operate a festival style ticketing model. The earlier you buy your ticket the cheaper it will be."
+                },
+                {
+                  question: "Do you do group discount? Stag/Hen etc",
+                  answer: "Yes, we offer a discounted ticket price for groups of 10 or more. These tickets can be found listed as the \"Big Group Package!\" above, orders for these tickets are restricted to a minimum of 10."
+                },
+                {
+                  question: "Will there be more tickets available if the event is sold out?",
+                  answer: "Once this event is sold out, there will not be any additional tickets released. In addition to this we will be unable to sell them at the door due to maximum capacity and health and safety regulations."
+                },
+                {
+                  question: "Is the venue accessible?",
+                  answer: "Our events take place at a variety of locations across the UK and Ireland. As each varies please ensure to check the specific venue's website for accessibility information."
+                },
+                {
+                  question: "Can I resell my tickets?",
+                  answer: "Yes, if you are unable to attend an event you are welcome to sell your tickets on. We do not use names on tickets as a condition for entry."
+                },
+                {
+                  question: "Are your events 18+?",
+                  answer: "All of our events are strictly 18+. A valid photographic ID may be requested on entry."
+                },
+                {
+                  question: "What do I do if I cant find my tickets or confirmation email?",
+                  answer: "You can email us at info@daytimediscoevents.co.uk with the full name you used when purchasing the tickets and proof of payment. We will then send you a copy of your tickets"
+                },
+                {
+                  question: "Are there tickets available on the door?",
+                  answer: "We always recommend booking in advance as we cannot guarantee on the door entry. However, in certain instances there will be a limited number of tickets on a first come first served basis for sale on the door."
+                },
+                {
+                  question: "I have more questions?",
+                  answer: "If you have additional questions and wish to contact us directly, don't hesitate to drop us a DM on either Facebook (Daytime Disco) or Instagram (@daytimediscoevents)"
+                }
+              ].map((faq, idx) => (
+                <div key={idx} className="border-b border-country-tan/30 last:border-b-0 pb-4 last:pb-0">
+                  <h3 className="font-bebas text-xl text-country-dark mb-2 flex items-start gap-2">
+                    <span className="text-2xl">🗣️</span>
+                    <span>{faq.question}</span>
+                  </h3>
+                  <p className="text-gray-700 ml-8">{faq.answer}</p>
+                </div>
+              ))}
+              
+              <div className="mt-8 pt-6 border-t border-country-tan/30">
+                <h3 className="font-bebas text-xl text-country-dark mb-2">Refund Policy:</h3>
+                <p className="text-gray-700">
+                  In-line with normal consumer standards for ticket purchases, tickets for Daytime Disco events are non-refundable, on the condition that we not moved the event or canceled it. If you are no longer be able to attend the event, you are of course welcome to gift or sell your tickets onwards as we do not use names on the tickets as a condition of entry.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Bottom Section */}
       <section className="py-16">
         <div className="container mx-auto px-4 text-center">
