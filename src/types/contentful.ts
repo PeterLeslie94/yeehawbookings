@@ -4,7 +4,7 @@ export interface IEventFields {
   title: string
   eventType: string
   date: string
-  City: string  // Note: Capital C to match your field
+  city: string  // Note: lowercase 'c' to match Contentful field ID
   skiddleUrl?: string
   image?: Asset
 }

@@ -32,10 +32,10 @@ VITE_CONTENTFUL_ACCESS_TOKEN=your_access_token_here
 ```
 
 3. In Contentful, use the existing `event` content type with these fields:
-   - `title` (Short text) - Event title, format: "Country Days [City] - [Venue]"
+   - `title` (Short text) - Event title
    - `eventType` (Short text) - Set to "country-days" for Country Days events
    - `date` (Date & time) - Event date and time
-   - `City` (Short text) - Event city (note the capital C)
+   - `city` (Short text) - Event city (Aberdeen, Dundee, Edinburgh, Glasgow, or Paisley)
    - `skiddleUrl` (Short text) - URL to Skiddle ticket page
    - `image` (Media) - Event image
 

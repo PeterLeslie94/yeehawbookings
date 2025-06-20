@@ -82,7 +82,7 @@ function App() {
   // Transform Contentful data to match our component structure
   const events = contentfulEvents.length > 0 ? contentfulEvents.map(event => {
     // Normalize city name - handle case sensitivity and whitespace
-    const rawCity = event.fields.City || ''
+    const rawCity = event.fields.city || ''
     const city = rawCity.trim()
     // Look up venue using lowercase city name
     const venue = city ? (cityVenueMap[city.toLowerCase()] || 'Venue TBA') : 'Venue TBA'
@@ -100,24 +100,11 @@ function App() {
     }
   }) : (!loading && !error ? fallbackEvents : [])
 
-  // Debug: Log all event cities
-  console.log('All event cities:', events.map(e => ({ city: e.city, title: e.title })))
-  console.log('Selected city:', selectedCity)
-  
   const filteredEvents = selectedCity === 'All Cities' 
     ? events 
     : events.filter(event => {
       // Case-insensitive comparison for filtering
-      const matches = event.city && event.city.toLowerCase() === selectedCity.toLowerCase()
-      if (selectedCity === 'Dundee') {
-        console.log('Dundee filter check:', { 
-          eventCity: event.city, 
-          eventCityLower: event.city?.toLowerCase(), 
-          selectedCityLower: selectedCity.toLowerCase(), 
-          matches 
-        })
-      }
-      return matches
+      return event.city && event.city.toLowerCase() === selectedCity.toLowerCase()
     })
 
   return (
