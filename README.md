@@ -1,6 +1,57 @@
-# React + TypeScript + Vite
+# Country Days
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The Ultimate Daytime Country Party! This is the official website for Country Days events across Scotland.
+
+## Setup
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+- Contentful account
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+```bash
+npm install
+```
+
+### Contentful Configuration
+
+1. Create a `.env` file in the root directory (copy from `.env.example`):
+```bash
+cp .env.example .env
+```
+
+2. Add your Contentful credentials to `.env`:
+```
+VITE_CONTENTFUL_SPACE_ID=your_space_id_here
+VITE_CONTENTFUL_ACCESS_TOKEN=your_access_token_here
+```
+
+3. In Contentful, use the existing `event` content type with these fields:
+   - `title` (Short text) - Event title, format: "Country Days [City] - [Venue]"
+   - `eventType` (Short text) - Set to "country-days" for Country Days events
+   - `date` (Date & time) - Event date and time
+   - `City` (Short text) - Event city (note the capital C)
+   - `skiddleUrl` (Short text) - URL to Skiddle ticket page
+   - `image` (Media) - Event image
+
+### Development
+
+Run the development server:
+```bash
+npm run dev
+```
+
+### Build
+
+Build for production:
+```bash
+npm run build
+```
 
 Currently, two official plugins are available:
 

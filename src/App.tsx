@@ -4,6 +4,7 @@ import pinkHat from './assets/cowboyhat-optimized.png'
 import sheriffBadge from './assets/sheriff-optimized.png'
 import eventImage from './assets/event-image.jpeg'
 import { useState } from 'react'
+import { useContentfulEvents } from './hooks/useContentful'
 
 function App() {
   const [selectedCity, setSelectedCity] = useState('All Cities')
@@ -15,50 +16,45 @@ function App() {
     "Zach Bryan"
   ]
 
-  const cities = ['All Cities', 'Aberdeen', 'Dundee', 'Edinburgh', 'Glasgow']
+  const cities = ['All Cities', 'Aberdeen', 'Dundee', 'Edinburgh', 'Glasgow', 'Paisley']
   
   const cityColors: Record<string, string> = {
     'Aberdeen': 'bg-red-600',
     'Dundee': 'bg-blue-600',
     'Edinburgh': 'bg-purple-600',
-    'Glasgow': 'bg-green-600'
+    'Glasgow': 'bg-green-600',
+    'Paisley': 'bg-yellow-600'
   }
   
-  // Mock events data - replace with Contentful data
-  const events = [
-    {
-      id: 1,
-      title: "Country Days Glasgow",
-      date: new Date('2024-03-15T14:30:00'),
-      city: "Glasgow",
-      venue: "Club Tropicana Glasgow",
-      image: eventImage
-    },
-    {
-      id: 2,
-      title: "Country Days Edinburgh",
-      date: new Date('2024-03-22T14:30:00'),
-      city: "Edinburgh",
-      venue: "Club Tropicana Edinburgh",
-      image: eventImage
-    },
-    {
-      id: 3,
-      title: "Country Days Aberdeen",
-      date: new Date('2024-03-29T14:30:00'),
-      city: "Aberdeen",
-      venue: "Aura Aberdeen",
-      image: eventImage
-    },
-    {
-      id: 4,
-      title: "Country Days Dundee",
-      date: new Date('2024-04-05T14:30:00'),
-      city: "Dundee",
-      venue: "Fat Sam's Dundee",
-      image: eventImage
+  // Fetch events from Contentful
+  const { events: contentfulEvents, loading, error } = useContentfulEvents()
+  
+  // Map of cities to their venues
+  const cityVenueMap: Record<string, string> = {
+    'Aberdeen': 'Aura, Aberdeen',
+    'Dundee': 'Fat Sams, Dundee',
+    'Edinburgh': 'Club Tropicana, Edinburgh',
+    'Glasgow': 'Club Tropicana, Glasgow',
+    'Paisley': 'Viennas, Paisley'
+  }
+  
+  // Transform Contentful data to match our component structure
+  const events = contentfulEvents.map(event => {
+    const city = event.fields.City
+    const venue = cityVenueMap[city] || `${city} Venue`
+    
+    return {
+      id: event.sys.id,
+      title: event.fields.title,
+      date: new Date(event.fields.date),
+      city: city,
+      venue: venue,
+      skiddleUrl: event.fields.skiddleUrl,
+      image: event.fields.image?.fields?.file?.url 
+        ? `https:${event.fields.image.fields.file.url}` 
+        : eventImage // Fallback to default image
     }
-  ]
+  })
 
   const filteredEvents = selectedCity === 'All Cities' 
     ? events 
@@ -131,6 +127,24 @@ function App() {
           </div>
 
           {/* Events Grid */}
+          {loading && (
+            <div className="text-center py-12">
+              <p className="text-country-dark font-bebas text-2xl">Loading events...</p>
+            </div>
+          )}
+          
+          {error && (
+            <div className="text-center py-12">
+              <p className="text-red-600 font-bebas text-2xl">{error}</p>
+            </div>
+          )}
+          
+          {!loading && !error && filteredEvents.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-country-dark font-bebas text-2xl">No events found</p>
+            </div>
+          )}
+          
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {filteredEvents.map((event) => (
               <div key={event.id} className="bg-white/90 backdrop-blur rounded-lg overflow-hidden shadow-xl border-4 border-country-brown hover:transform hover:scale-105 transition-transform">
@@ -163,8 +177,12 @@ function App() {
                       2:30 PM - 7:30 PM
                     </p>
                   </div>
-                  <button className="w-full bg-country-orange hover:bg-country-brown text-white font-western py-3 px-4 rounded transition-colors text-lg">
-                    Get Tickets
+                  <button 
+                    onClick={() => event.skiddleUrl && window.open(event.skiddleUrl, '_blank')}
+                    className="w-full bg-country-orange hover:bg-country-brown text-white font-western py-3 px-4 rounded transition-colors text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!event.skiddleUrl}
+                  >
+                    {event.skiddleUrl ? 'Get Tickets' : 'Coming Soon'}
                   </button>
                 </div>
               </div>
