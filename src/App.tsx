@@ -80,8 +80,12 @@ function App() {
   
   // Transform Contentful data to match our component structure
   const events = contentfulEvents.length > 0 ? contentfulEvents.map(event => {
-    const city = event.fields.City || ''
+    // Normalize city name - handle case sensitivity and whitespace
+    const rawCity = event.fields.City || ''
+    const city = rawCity.trim()
     const venue = city ? (cityVenueMap[city] || 'Venue TBA') : 'Venue TBA'
+    
+    console.log('Event city:', { raw: rawCity, normalized: city, venue })
     
     return {
       id: event.sys.id,
@@ -98,7 +102,11 @@ function App() {
 
   const filteredEvents = selectedCity === 'All Cities' 
     ? events 
-    : events.filter(event => event.city && event.city === selectedCity)
+    : events.filter(event => {
+      const matches = event.city && event.city === selectedCity
+      console.log('Filtering:', { eventCity: event.city, selectedCity, matches })
+      return matches
+    })
 
   return (
     <div className="min-h-screen relative">
