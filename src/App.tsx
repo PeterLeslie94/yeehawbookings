@@ -3,8 +3,10 @@ import backgroundTexture from './assets/background-paper.webp'
 import pinkHat from './assets/cowboyhat-optimized.png'
 import sheriffBadge from './assets/sheriff-optimized.png'
 import eventImage from './assets/event-image.jpeg'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useContentfulEvents } from './hooks/useContentful'
+import { toZonedTime } from 'date-fns-tz'
+import { endOfDay, isAfter } from 'date-fns'
 
 function App() {
   const [selectedCity, setSelectedCity] = useState('All Cities')
@@ -80,7 +82,7 @@ function App() {
   ]
   
   // Transform Contentful data to match our component structure
-  const events = contentfulEvents.length > 0 ? contentfulEvents.map(event => {
+  const allEvents = contentfulEvents.length > 0 ? contentfulEvents.map(event => {
     // Normalize city name - handle case sensitivity and whitespace
     const rawCity = event.fields.city || ''
     const city = rawCity.trim()
@@ -99,6 +101,22 @@ function App() {
         : eventImage // Fallback to default image
     }
   }) : (!loading && !error ? fallbackEvents : [])
+
+  // Filter out past events based on UK timezone
+  const events = useMemo(() => {
+    const ukTimeZone = 'Europe/London'
+    const now = new Date()
+    const nowInUK = toZonedTime(now, ukTimeZone)
+    
+    return allEvents.filter(event => {
+      // Convert event date to UK timezone
+      const eventDateInUK = toZonedTime(event.date, ukTimeZone)
+      // Get end of day for the event in UK timezone
+      const eventEndOfDayInUK = endOfDay(eventDateInUK)
+      // Check if current UK time is after the end of the event day
+      return !isAfter(nowInUK, eventEndOfDayInUK)
+    })
+  }, [allEvents])
 
   const filteredEvents = selectedCity === 'All Cities' 
     ? events 
