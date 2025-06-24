@@ -66,7 +66,6 @@ export const Gallery = () => {
               const imageUrl = image.fields?.file?.url
               const fullImageUrl = imageUrl ? (imageUrl.startsWith('//') ? `https:${imageUrl}` : imageUrl) : eventImage
               const imageTitle = image.fields?.title || `Image ${index + 1}`
-              const imageDescription = image.fields?.description || ''
               
               return (
                 <div
