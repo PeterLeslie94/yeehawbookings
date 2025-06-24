@@ -7,6 +7,7 @@ import { useState, useMemo } from 'react'
 import { useContentfulEvents } from './hooks/useContentful'
 import { toZonedTime } from 'date-fns-tz'
 import { endOfDay, isAfter } from 'date-fns'
+import { Testimonials } from './components/Testimonials'
 
 function App() {
   const [selectedCity, setSelectedCity] = useState('All Cities')
@@ -306,6 +307,9 @@ function App() {
           </div>
         </div>
       </section>
+
+      {/* Testimonials Section */}
+      <Testimonials />
 
       {/* FAQ Section */}
       <section className="py-16">
