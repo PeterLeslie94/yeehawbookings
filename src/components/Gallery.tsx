@@ -61,8 +61,8 @@ export const Gallery = () => {
             Country Days Gallery
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-            {displayImages.map((image, index) => {
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
+            {displayImages.slice(0, 6).map((image, index) => {
               const imageUrl = image.fields?.file?.url
               const fullImageUrl = imageUrl ? (imageUrl.startsWith('//') ? `https:${imageUrl}` : imageUrl) : eventImage
               const imageTitle = image.fields?.title || `Image ${index + 1}`
