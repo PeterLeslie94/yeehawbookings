@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useContentfulGallery } from '../hooks/useContentful'
 import type { Asset } from 'contentful'
+import eventImage from '../assets/event-image.jpeg'
 
 export const Gallery = () => {
   const { gallery, loading, error } = useContentfulGallery()
@@ -8,15 +9,16 @@ export const Gallery = () => {
 
   // Fallback gallery images (for when Contentful is not configured)
   const fallbackImages = [
-    '/assets/event-image.jpeg',
-    '/assets/event-image.jpeg',
-    '/assets/event-image.jpeg',
-    '/assets/event-image.jpeg',
-    '/assets/event-image.jpeg',
-    '/assets/event-image.jpeg'
+    eventImage,
+    eventImage,
+    eventImage,
+    eventImage,
+    eventImage,
+    eventImage
   ]
 
   const images: Asset[] = gallery?.fields?.images || []
+  
   const displayImages = images.length > 0 ? images : (!loading && !error ? fallbackImages.map((url, index) => ({
     sys: { id: `fallback-${index}` },
     fields: {
@@ -59,10 +61,10 @@ export const Gallery = () => {
             Country Days Gallery
           </h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
             {displayImages.map((image, index) => {
               const imageUrl = image.fields?.file?.url
-              const fullImageUrl = imageUrl ? (imageUrl.startsWith('//') ? `https:${imageUrl}` : imageUrl) : '/assets/event-image.jpeg'
+              const fullImageUrl = imageUrl ? (imageUrl.startsWith('//') ? `https:${imageUrl}` : imageUrl) : eventImage
               const imageTitle = image.fields?.title || `Image ${index + 1}`
               const imageDescription = image.fields?.description || ''
               
@@ -78,14 +80,6 @@ export const Gallery = () => {
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 hover:opacity-100 transition-opacity">
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <h3 className="font-bebas text-white text-lg">{imageTitle}</h3>
-                      {imageDescription && (
-                        <p className="text-white/80 text-sm">{imageDescription}</p>
-                      )}
-                    </div>
-                  </div>
                 </div>
               )
             })}
@@ -119,7 +113,7 @@ export const Gallery = () => {
                     ? (displayImages[selectedImage].fields.file.url.startsWith('//') 
                       ? `https:${displayImages[selectedImage].fields.file.url}` 
                       : displayImages[selectedImage].fields.file.url)
-                    : '/assets/event-image.jpeg'}
+                    : eventImage}
                   alt={displayImages[selectedImage].fields?.title || `Image ${selectedImage + 1}`}
                   className="max-w-full max-h-[90vh] object-contain rounded-lg"
                 />

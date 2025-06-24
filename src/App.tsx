@@ -260,6 +260,9 @@ function App() {
         </div>
       </section>
 
+      {/* Gallery Section */}
+      <Gallery />
+
       {/* What to Expect Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
@@ -311,9 +314,6 @@ function App() {
 
       {/* Testimonials Section */}
       <Testimonials />
-
-      {/* Gallery Section */}
-      <Gallery />
 
       {/* FAQ Section */}
       <section className="py-16">

@@ -37,7 +37,9 @@
    - Click "Link existing assets" or "Create new assets and link" to add multiple images
    - You can upload multiple images at once
    - Each image can have its own title and description in the Media library
-4. Click "Publish"
+4. **IMPORTANT**: Click "Publish" to make the gallery live
+   - Images in draft status will NOT appear on the website
+   - Make sure all images are published in the Media library first
 
 ## Tips
 
@@ -54,6 +56,10 @@
 - To remove images: Edit your gallery entry and unlink images from the "Images" field
 - To reorder images: In the gallery entry, drag and drop images in the "Images" field
 - To update image titles/descriptions: Go to Media library and edit individual assets
+- **Publishing**: When adding new images, make sure to:
+  1. Publish the individual image assets in the Media library
+  2. Publish the gallery entry that contains them
+  - Both steps are required for images to appear on the website
 
 ## Troubleshooting
 
