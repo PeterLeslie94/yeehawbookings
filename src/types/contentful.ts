@@ -15,3 +15,15 @@ export interface IEvent {
   }
   fields: IEventFields
 }
+
+export interface IGalleryFields {
+  title: string
+  images: Asset[]
+}
+
+export interface IGallery {
+  sys: {
+    id: string
+  }
+  fields: IGalleryFields
+}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import contentfulClient from '../lib/contentful'
-import type { IEvent } from '../types/contentful'
+import type { IEvent, IGallery } from '../types/contentful'
 
 export const useContentfulEvents = () => {
   const [events, setEvents] = useState<IEvent[]>([])
@@ -42,4 +42,49 @@ export const useContentfulEvents = () => {
   }, [])
 
   return { events, loading, error }
+}
+
+export const useContentfulGallery = () => {
+  const [gallery, setGallery] = useState<IGallery | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        // Check if environment variables are set
+        if (!import.meta.env.VITE_CONTENTFUL_SPACE_ID || !import.meta.env.VITE_CONTENTFUL_ACCESS_TOKEN) {
+          console.warn('Contentful credentials not configured')
+          setGallery(null)
+          setLoading(false)
+          return
+        }
+
+        const response = await contentfulClient.getEntries({
+          content_type: 'gallery',
+          limit: 1,
+        })
+        
+        console.log('Contentful gallery response:', response.items.length, 'galleries found')
+        
+        if (response.items.length > 0) {
+          // Type assertion since we know the structure
+          const galleryData = response.items[0] as unknown as IGallery
+          setGallery(galleryData)
+        } else {
+          setGallery(null)
+        }
+        
+        setLoading(false)
+      } catch (err) {
+        console.error('Error fetching gallery from Contentful:', err)
+        setError('Failed to load gallery. Please check your connection.')
+        setLoading(false)
+      }
+    }
+
+    fetchGallery()
+  }, [])
+
+  return { gallery, loading, error }
 }

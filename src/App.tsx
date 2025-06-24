@@ -8,6 +8,7 @@ import { useContentfulEvents } from './hooks/useContentful'
 import { toZonedTime } from 'date-fns-tz'
 import { endOfDay, isAfter } from 'date-fns'
 import { Testimonials } from './components/Testimonials'
+import { Gallery } from './components/Gallery'
 
 function App() {
   const [selectedCity, setSelectedCity] = useState('All Cities')
@@ -310,6 +311,9 @@ function App() {
 
       {/* Testimonials Section */}
       <Testimonials />
+
+      {/* Gallery Section */}
+      <Gallery />
 
       {/* FAQ Section */}
       <section className="py-16">
