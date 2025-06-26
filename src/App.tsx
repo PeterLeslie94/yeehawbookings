@@ -243,7 +243,7 @@ function App() {
                     </p>
                     <p className="flex items-center gap-2">
                       <img src={sheriffBadge} className="w-4 h-4" alt="" />
-                      2:30 PM - 7:30 PM
+                      3:00 PM - 8:00 PM
                     </p>
                   </div>
                   <button 
