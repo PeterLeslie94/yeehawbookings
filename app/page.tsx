@@ -1,8 +1,6 @@
-import logo from './assets/logo-optimized.png'
-import backgroundTexture from './assets/background-paper.webp'
-import pinkHat from './assets/cowboyhat-optimized.png'
-import sheriffBadge from './assets/sheriff-optimized.png'
-import eventImage from './assets/event-image.jpeg'
+'use client'
+
+import Image from 'next/image'
 import { useState, useMemo } from 'react'
 import { useContentfulEvents } from './hooks/useContentful'
 import { toZonedTime } from 'date-fns-tz'
@@ -10,7 +8,7 @@ import { endOfDay, isAfter } from 'date-fns'
 import { Testimonials } from './components/Testimonials'
 import { Gallery } from './components/Gallery'
 
-function App() {
+export default function Home() {
   const [selectedCity, setSelectedCity] = useState('All Cities')
   
   const artists = [
@@ -33,7 +31,6 @@ function App() {
   // Fetch events from Contentful
   const { events: contentfulEvents, loading, error } = useContentfulEvents()
   
-  // Map of cities to their venues
   // Map cities to venues - handle case variations
   const cityVenueMap: Record<string, string> = {
     'aberdeen': 'Aura, Aberdeen',
@@ -52,7 +49,7 @@ function App() {
       city: 'Glasgow',
       venue: 'Club Tropicana, Glasgow',
       skiddleUrl: '',
-      image: eventImage
+      image: '/images/event-image.jpeg'
     },
     {
       id: '2',
@@ -61,7 +58,7 @@ function App() {
       city: 'Edinburgh',
       venue: 'Club Tropicana, Edinburgh',
       skiddleUrl: '',
-      image: eventImage
+      image: '/images/event-image.jpeg'
     },
     {
       id: '3',
@@ -70,7 +67,7 @@ function App() {
       city: 'Aberdeen',
       venue: 'Aura, Aberdeen',
       skiddleUrl: '',
-      image: eventImage
+      image: '/images/event-image.jpeg'
     },
     {
       id: '4',
@@ -79,7 +76,7 @@ function App() {
       city: 'Dundee',
       venue: 'Fat Sams, Dundee',
       skiddleUrl: '',
-      image: eventImage
+      image: '/images/event-image.jpeg'
     }
   ]
   
@@ -100,7 +97,7 @@ function App() {
       skiddleUrl: event.fields.skiddleUrl || '',
       image: event.fields.image?.fields?.file?.url 
         ? `https:${event.fields.image.fields.file.url}` 
-        : eventImage // Fallback to default image
+        : '/images/event-image.jpeg' // Fallback to default image
     }
   }) : (!loading && !error ? fallbackEvents : [])
 
@@ -133,7 +130,7 @@ function App() {
       <div 
         className="absolute inset-0 z-0"
         style={{
-          backgroundImage: `url(${backgroundTexture})`,
+          backgroundImage: `url(/images/background-paper.webp)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center'
         }}
@@ -145,15 +142,17 @@ function App() {
       <section className="relative overflow-hidden">
         
         <div className="container mx-auto px-4 pt-12 pb-8 text-center relative z-10">
-          <img src={logo} alt="Country Days" className="mx-auto mb-1 w-64 md:w-80 lg:w-96" />
+          <Image src="/images/logo-optimized.png" alt="Country Days" width={384} height={200} className="mx-auto mb-1" />
           
           <div className="relative inline-block mb-4">
             <h1 className="font-western text-4xl md:text-6xl lg:text-7xl text-country-dark">
               COUNTRY DAYS
             </h1>
-            <img 
-              src={pinkHat} 
+            <Image 
+              src="/images/cowboyhat-optimized.png" 
               alt="" 
+              width={80}
+              height={80}
               className="absolute w-10 md:w-16 lg:w-20 -top-3 md:-top-4 lg:-top-5 -left-[5%] md:-left-[4%] animate-cowboy-nod"
             />
           </div>
@@ -216,7 +215,13 @@ function App() {
             {filteredEvents.map((event) => (
               <div key={event.id} className="bg-white/90 backdrop-blur rounded-lg overflow-hidden shadow-xl border-4 border-country-brown hover:transform hover:scale-105 transition-transform">
                 <div className="relative aspect-square">
-                  <img src={event.image} alt={event.title} className="w-full h-full object-cover" loading="lazy" />
+                  <Image 
+                    src={event.image} 
+                    alt={event.title} 
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
                   {event.city && (
                     <div className={`absolute top-4 right-4 ${cityColors[event.city] || 'bg-gray-600'} text-white px-3 py-1 rounded-full font-bebas text-sm`}>
                       {event.city.toUpperCase()}
@@ -229,7 +234,7 @@ function App() {
                   </h3>
                   <div className="space-y-2 text-gray-700 mb-4">
                     <p className="flex items-center gap-2">
-                      <img src="/icons/013-horseshoe.png" className="w-4 h-4" alt="" />
+                      <Image src="/icons/013-horseshoe.png" width={16} height={16} alt="" />
                       {event.date.toLocaleDateString('en-GB', { 
                         weekday: 'long', 
                         day: 'numeric', 
@@ -238,11 +243,11 @@ function App() {
                       })}
                     </p>
                     <p className="flex items-center gap-2">
-                      <img src="/icons/050-saloon.png" className="w-4 h-4" alt="" />
+                      <Image src="/icons/050-saloon.png" width={16} height={16} alt="" />
                       {event.venue}
                     </p>
                     <p className="flex items-center gap-2">
-                      <img src={sheriffBadge} className="w-4 h-4" alt="" />
+                      <Image src="/images/sheriff-optimized.png" width={16} height={16} alt="" />
                       3:00 PM - 8:00 PM
                     </p>
                   </div>
@@ -280,7 +285,7 @@ function App() {
               { icon: "/icons/013-horseshoe.png", title: "Perfect for Parties", desc: "Hen dos, birthdays, stag celebrations or just a wild day out with friends" }
             ].map((item, idx) => (
               <div key={idx} className="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform border-2 border-country-orange">
-                <img src={item.icon} alt="" className="w-12 h-12 mb-3" />
+                <Image src={item.icon} alt="" width={48} height={48} className="mb-3" />
                 <h3 className="font-bebas text-2xl text-country-brown mb-2">{item.title}</h3>
                 <p className="text-gray-700">{item.desc}</p>
               </div>
@@ -300,7 +305,7 @@ function App() {
             <div className="flex flex-wrap justify-center gap-3">
               {artists.map((artist, idx) => (
                 <span key={idx} className="bg-country-orange text-white px-4 py-2 rounded-full font-bebas text-lg hover:bg-country-brown transition-colors flex items-center gap-2 inline-flex">
-                  <img src={sheriffBadge} alt="" className="w-4 h-4" />
+                  <Image src="/images/sheriff-optimized.png" alt="" width={16} height={16} />
                   {artist}
                 </span>
               ))}
@@ -385,7 +390,7 @@ function App() {
       {/* Bottom Section */}
       <section className="py-16">
         <div className="container mx-auto px-4 text-center">
-          <img src={logo} alt="Country Days" className="w-48 md:w-64 mx-auto mb-6" loading="lazy" />
+          <Image src="/images/logo-optimized.png" alt="Country Days" width={256} height={133} className="mx-auto mb-6" />
           <p className="text-lg text-white font-bold max-w-3xl mx-auto mb-6">
             Country Days is where the drinks flow, the dancefloor fills, and the songs never end. 
             Whether you're a die-hard country fan or just in it for the good times – 
@@ -423,5 +428,3 @@ function App() {
     </div>
   )
 }
-
-export default App

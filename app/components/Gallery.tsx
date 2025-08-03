@@ -1,7 +1,10 @@
+'use client'
+
 import { useState } from 'react'
+import Image from 'next/image'
 import { useContentfulGallery } from '../hooks/useContentful'
 import type { Asset } from 'contentful'
-import eventImage from '../assets/event-image.jpeg'
+const eventImage = '/images/event-image.jpeg'
 
 export const Gallery = () => {
   const { gallery, loading, error } = useContentfulGallery()
@@ -64,7 +67,7 @@ export const Gallery = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
             {displayImages.slice(0, 6).map((image, index) => {
               const imageUrl = image.fields?.file?.url
-              const fullImageUrl = imageUrl ? (imageUrl.startsWith('//') ? `https:${imageUrl}` : imageUrl) : eventImage
+              const fullImageUrl = imageUrl ? (imageUrl.startsWith('//') ? `https:${imageUrl}` : imageUrl) : '/images/event-image.jpeg'
               const imageTitle = image.fields?.title || `Image ${index + 1}`
               
               return (
@@ -73,11 +76,12 @@ export const Gallery = () => {
                   className="relative aspect-square overflow-hidden rounded-lg border-4 border-country-brown hover:border-country-orange transition-all cursor-pointer transform hover:scale-105"
                   onClick={() => setSelectedImage(index)}
                 >
-                  <img
+                  <Image
                     src={fullImageUrl}
                     alt={imageTitle}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 33vw"
                   />
                 </div>
               )
@@ -107,15 +111,19 @@ export const Gallery = () => {
             </button>
             {displayImages[selectedImage] && (
               <>
-                <img
-                  src={displayImages[selectedImage].fields?.file?.url 
-                    ? (displayImages[selectedImage].fields.file.url.startsWith('//') 
-                      ? `https:${displayImages[selectedImage].fields.file.url}` 
-                      : displayImages[selectedImage].fields.file.url)
-                    : eventImage}
-                  alt={displayImages[selectedImage].fields?.title || `Image ${selectedImage + 1}`}
-                  className="max-w-full max-h-[90vh] object-contain rounded-lg"
-                />
+                <div className="relative w-[90vw] h-[90vh] max-w-5xl">
+                  <Image
+                    src={displayImages[selectedImage].fields?.file?.url 
+                      ? (displayImages[selectedImage].fields.file.url.startsWith('//') 
+                        ? `https:${displayImages[selectedImage].fields.file.url}` 
+                        : displayImages[selectedImage].fields.file.url)
+                      : '/images/event-image.jpeg'}
+                    alt={displayImages[selectedImage].fields?.title || `Image ${selectedImage + 1}`}
+                    fill
+                    className="object-contain rounded-lg"
+                    sizes="90vw"
+                  />
+                </div>
                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-4 rounded-b-lg">
                   <h3 className="font-western text-white text-2xl">
                     {displayImages[selectedImage].fields?.title || `Image ${selectedImage + 1}`}

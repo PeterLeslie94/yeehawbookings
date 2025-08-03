@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 export const Testimonials = () => {
   const testimonials = [
     {
@@ -56,10 +58,12 @@ export const Testimonials = () => {
               className="bg-white/90 backdrop-blur rounded-lg shadow-xl p-6 border-4 border-country-orange hover:transform hover:scale-105 transition-all relative"
             >
               <div className="absolute -top-3 -left-3">
-                <img 
+                <Image 
                   src="/icons/013-horseshoe.png" 
                   alt="" 
-                  className="w-8 h-8 transform -rotate-12"
+                  width={32}
+                  height={32}
+                  className="transform -rotate-12"
                 />
               </div>
               

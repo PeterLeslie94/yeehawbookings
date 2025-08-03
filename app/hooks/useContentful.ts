@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from 'react'
 import contentfulClient from '../lib/contentful'
 import type { IEvent, IGallery } from '../types/contentful'
@@ -11,7 +13,7 @@ export const useContentfulEvents = () => {
     const fetchEvents = async () => {
       try {
         // Check if environment variables are set
-        if (!import.meta.env.VITE_CONTENTFUL_SPACE_ID || !import.meta.env.VITE_CONTENTFUL_ACCESS_TOKEN) {
+        if (!process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID || !process.env.NEXT_PUBLIC_CONTENTFUL_ACCESS_TOKEN) {
           console.warn('Contentful credentials not configured')
           setEvents([])
           setLoading(false)
@@ -53,7 +55,7 @@ export const useContentfulGallery = () => {
     const fetchGallery = async () => {
       try {
         // Check if environment variables are set
-        if (!import.meta.env.VITE_CONTENTFUL_SPACE_ID || !import.meta.env.VITE_CONTENTFUL_ACCESS_TOKEN) {
+        if (!process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID || !process.env.NEXT_PUBLIC_CONTENTFUL_ACCESS_TOKEN) {
           console.warn('Contentful credentials not configured')
           setGallery(null)
           setLoading(false)

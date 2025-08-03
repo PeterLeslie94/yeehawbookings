@@ -1,7 +1,7 @@
 import { createClient } from 'contentful'
 
-const spaceId = import.meta.env.VITE_CONTENTFUL_SPACE_ID
-const accessToken = import.meta.env.VITE_CONTENTFUL_ACCESS_TOKEN
+const spaceId = process.env.NEXT_PUBLIC_CONTENTFUL_SPACE_ID
+const accessToken = process.env.NEXT_PUBLIC_CONTENTFUL_ACCESS_TOKEN
 
 // Log environment variables (without exposing sensitive data)
 console.log('Contentful Config:', {
