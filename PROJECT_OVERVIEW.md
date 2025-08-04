@@ -11,7 +11,7 @@ Build a multi-step booking system with Stripe integration, allowing customers to
 - **Hosting**: Vercel (existing)
 - **Authentication**: Auth.js
 - **Payments**: Stripe
-- **Database**: Neon PostgreSQL with Prisma ORM
+- **Database**: Railway PostgreSQL with Prisma ORM
 
 ## User Stories & Requirements
 

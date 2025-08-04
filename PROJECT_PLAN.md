@@ -13,12 +13,12 @@ This document outlines the development plan for implementing a comprehensive nig
 #### Tasks:
 - [ ] Install core dependencies
   ```bash
-  npm install @prisma/client prisma @neondatabase/serverless
+  npm install @prisma/client prisma
   npm install next-auth @auth/prisma-adapter bcryptjs
   npm install --save-dev @types/bcryptjs
   ```
 - [ ] Create Prisma schema with all required tables
-- [ ] Configure Neon PostgreSQL connection
+- [ ] Configure Railway PostgreSQL connection
 - [ ] Run initial database migrations
 - [ ] Set up environment variables
 
