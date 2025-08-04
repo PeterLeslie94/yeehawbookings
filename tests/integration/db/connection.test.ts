@@ -79,23 +79,31 @@ describe('Database Connection', () => {
     it('should validate User model structure', async () => {
       // This test validates that we can create a user with the expected fields
       const userData = {
-        email: 'test@example.com',
+        email: `test-${Date.now()}@example.com`, // Make email unique
         name: 'Test User',
         password: 'hashedpassword',
         role: 'CUSTOMER' as const
       }
 
-      // Note: This will fail until database is actually connected
-      // This is expected in TDD red phase
-      await expect(
-        prisma.user.create({ data: userData })
-      ).rejects.toThrow()
+      // Act
+      const user = await prisma.user.create({ data: userData })
+
+      // Assert
+      expect(user).toBeDefined()
+      expect(user.email).toBe(userData.email)
+      expect(user.name).toBe(userData.name)
+      expect(user.role).toBe('CUSTOMER')
+      
+      // Cleanup
+      await prisma.user.delete({ where: { id: user.id } }).catch(() => {
+        // User might already be deleted
+      })
     })
 
     it('should validate Booking model structure', async () => {
       // This test validates booking model with all required fields
       const bookingData = {
-        bookingReference: 'TEST-REF-001',
+        bookingReference: `TEST-REF-${Date.now()}`, // Make reference unique
         guestEmail: 'guest@example.com',
         guestName: 'Guest User',
         bookingDate: new Date('2024-12-20'),
@@ -104,11 +112,19 @@ describe('Database Connection', () => {
         customerNotes: 'Birthday celebration'
       }
 
-      // Note: This will fail until database is actually connected
-      // This is expected in TDD red phase
-      await expect(
-        prisma.booking.create({ data: bookingData })
-      ).rejects.toThrow()
+      // Act
+      const booking = await prisma.booking.create({ data: bookingData })
+
+      // Assert
+      expect(booking).toBeDefined()
+      expect(booking.bookingReference).toBe(bookingData.bookingReference)
+      expect(booking.guestEmail).toBe(bookingData.guestEmail)
+      expect(booking.totalAmount).toBe(100.00)
+      
+      // Cleanup
+      await prisma.booking.delete({ where: { id: booking.id } }).catch(() => {
+        // Booking might already be deleted
+      })
     })
   })
 })

@@ -6,42 +6,42 @@ describe('Booking CRUD Operations', () => {
 
   beforeAll(async () => {
     prisma = new PrismaClient()
-    
-    // Create a test user for bookings
+  })
+
+  afterAll(async () => {
+    await prisma.$disconnect()
+  })
+  
+  beforeEach(async () => {
+    // Create a fresh test user for each test
     testUser = await prisma.user.create({
       data: {
-        email: 'booking.test.user@example.com',
+        email: `booking.test.user-${Date.now()}@example.com`,
         name: 'Booking Test User',
         role: UserRole.CUSTOMER
       }
     })
   })
 
-  afterAll(async () => {
-    // Clean up test user and related bookings
-    await prisma.user.delete({
-      where: { id: testUser.id }
-    })
-    await prisma.$disconnect()
-  })
-
-  beforeEach(async () => {
-    // Clean up test bookings before each test
-    await prisma.booking.deleteMany({
-      where: { 
-        OR: [
-          { userId: testUser.id },
-          { guestEmail: { contains: 'test' } }
-        ]
+  afterEach(async () => {
+    // Clean up test data after each test
+    if (testUser && testUser.id) {
+      try {
+        // Delete user - this will cascade delete bookings
+        await prisma.user.delete({
+          where: { id: testUser.id }
+        })
+      } catch (error) {
+        // User might already be deleted or doesn't exist
       }
-    })
+    }
   })
 
   describe('Create Operations', () => {
     it('should create a booking for registered user', async () => {
       // Arrange
       const bookingData = {
-        bookingReference: 'TEST-001',
+        bookingReference: `TEST-001-${Date.now()}`,
         userId: testUser.id,
         bookingDate: new Date('2024-12-20T20:00:00Z'),
         totalAmount: 150.00,
@@ -67,7 +67,7 @@ describe('Booking CRUD Operations', () => {
     it('should create a guest booking', async () => {
       // Arrange
       const bookingData = {
-        bookingReference: 'GUEST-001',
+        bookingReference: `GUEST-001-${Date.now()}`,
         guestEmail: 'guest.test@example.com',
         guestName: 'Guest User',
         bookingDate: new Date('2024-12-21T21:00:00Z'),
@@ -88,7 +88,7 @@ describe('Booking CRUD Operations', () => {
       // Arrange
       const promoCode = await prisma.promoCode.create({
         data: {
-          code: 'TEST20',
+          code: `TEST20-${Date.now()}`, // Make code unique
           discountType: 'PERCENTAGE',
           discountValue: 20,
           validFrom: new Date('2024-01-01'),
@@ -97,7 +97,7 @@ describe('Booking CRUD Operations', () => {
       })
 
       const bookingData = {
-        bookingReference: 'PROMO-001',
+        bookingReference: `PROMO-001-${Date.now()}`,
         userId: testUser.id,
         bookingDate: new Date('2024-12-20T20:00:00Z'),
         totalAmount: 100.00,
@@ -125,7 +125,7 @@ describe('Booking CRUD Operations', () => {
     it('should enforce unique booking reference', async () => {
       // Arrange
       const bookingData = {
-        bookingReference: 'UNIQUE-001',
+        bookingReference: `UNIQUE-001-${Date.now()}`,
         userId: testUser.id,
         bookingDate: new Date('2024-12-20'),
         totalAmount: 100.00,
@@ -145,9 +145,10 @@ describe('Booking CRUD Operations', () => {
   describe('Read Operations', () => {
     it('should find booking by reference', async () => {
       // Arrange
+      const bookingRef = `FIND-001-${Date.now()}`
       const booking = await prisma.booking.create({
         data: {
-          bookingReference: 'FIND-001',
+          bookingReference: bookingRef,
           userId: testUser.id,
           bookingDate: new Date('2024-12-20'),
           totalAmount: 100.00,
@@ -157,7 +158,7 @@ describe('Booking CRUD Operations', () => {
 
       // Act
       const found = await prisma.booking.findUnique({
-        where: { bookingReference: 'FIND-001' }
+        where: { bookingReference: bookingRef }
       })
 
       // Assert
@@ -170,14 +171,14 @@ describe('Booking CRUD Operations', () => {
       await prisma.booking.createMany({
         data: [
           {
-            bookingReference: 'USER-001',
+            bookingReference: `USER-001-${Date.now()}`,
             userId: testUser.id,
             bookingDate: new Date('2024-12-20'),
             totalAmount: 100.00,
             finalAmount: 100.00
           },
           {
-            bookingReference: 'USER-002',
+            bookingReference: `USER-002-${Date.now()}`,
             userId: testUser.id,
             bookingDate: new Date('2024-12-21'),
             totalAmount: 150.00,
@@ -194,8 +195,8 @@ describe('Booking CRUD Operations', () => {
 
       // Assert
       expect(bookings).toHaveLength(2)
-      expect(bookings[0].bookingReference).toBe('USER-001')
-      expect(bookings[1].bookingReference).toBe('USER-002')
+      expect(bookings[0].bookingReference).toContain('USER-001')
+      expect(bookings[1].bookingReference).toContain('USER-002')
     })
 
     it('should find bookings by date range', async () => {
@@ -203,21 +204,21 @@ describe('Booking CRUD Operations', () => {
       await prisma.booking.createMany({
         data: [
           {
-            bookingReference: 'DATE-001',
+            bookingReference: `DATE-001-${Date.now()}`,
             userId: testUser.id,
             bookingDate: new Date('2024-12-19'),
             totalAmount: 100.00,
             finalAmount: 100.00
           },
           {
-            bookingReference: 'DATE-002',
+            bookingReference: `DATE-002-${Date.now()}`,
             userId: testUser.id,
             bookingDate: new Date('2024-12-20'),
             totalAmount: 100.00,
             finalAmount: 100.00
           },
           {
-            bookingReference: 'DATE-003',
+            bookingReference: `DATE-003-${Date.now()}`,
             userId: testUser.id,
             bookingDate: new Date('2024-12-21'),
             totalAmount: 100.00,
@@ -237,16 +238,18 @@ describe('Booking CRUD Operations', () => {
         orderBy: { bookingDate: 'asc' }
       })
 
-      // Assert
+      // Assert - should find DATE-002 and DATE-003
       expect(bookings).toHaveLength(2)
-      expect(bookings.map(b => b.bookingReference)).toEqual(['DATE-002', 'DATE-003'])
+      const refs = bookings.map(b => b.bookingReference)
+      expect(refs.some(r => r.includes('DATE-002'))).toBe(true)
+      expect(refs.some(r => r.includes('DATE-003'))).toBe(true)
     })
 
     it('should include booking items when requested', async () => {
       // Arrange
       const booking = await prisma.booking.create({
         data: {
-          bookingReference: 'ITEMS-001',
+          bookingReference: `ITEMS-001-${Date.now()}`,
           userId: testUser.id,
           bookingDate: new Date('2024-12-20'),
           totalAmount: 100.00,
@@ -271,7 +274,7 @@ describe('Booking CRUD Operations', () => {
       // Arrange
       const booking = await prisma.booking.create({
         data: {
-          bookingReference: 'STATUS-001',
+          bookingReference: `STATUS-001-${Date.now()}`,
           userId: testUser.id,
           bookingDate: new Date('2024-12-20'),
           totalAmount: 100.00,
@@ -294,7 +297,7 @@ describe('Booking CRUD Operations', () => {
       // Arrange
       const booking = await prisma.booking.create({
         data: {
-          bookingReference: 'STRIPE-001',
+          bookingReference: `STRIPE-001-${Date.now()}`,
           userId: testUser.id,
           bookingDate: new Date('2024-12-20'),
           totalAmount: 100.00,
@@ -316,7 +319,7 @@ describe('Booking CRUD Operations', () => {
       // Arrange
       const booking = await prisma.booking.create({
         data: {
-          bookingReference: 'CANCEL-001',
+          bookingReference: `CANCEL-001-${Date.now()}`,
           userId: testUser.id,
           bookingDate: new Date('2024-12-20'),
           totalAmount: 100.00,
@@ -350,7 +353,7 @@ describe('Booking CRUD Operations', () => {
 
       const booking = await prisma.booking.create({
         data: {
-          bookingReference: 'DELETE-001',
+          bookingReference: `DELETE-001-${Date.now()}`,
           userId: testUser.id,
           bookingDate: new Date('2024-12-20'),
           totalAmount: 100.00,
@@ -383,8 +386,7 @@ describe('Booking CRUD Operations', () => {
       expect(foundBooking).toBeNull()
       expect(bookingItems).toHaveLength(0)
 
-      // Cleanup
-      await prisma.package.delete({ where: { id: package1.id } })
+      // Cleanup - package is already deleted by cascade
     })
   })
 
@@ -408,7 +410,7 @@ describe('Booking CRUD Operations', () => {
 
       const booking = await prisma.booking.create({
         data: {
-          bookingReference: 'CALC-001',
+          bookingReference: `CALC-001-${Date.now()}`,
           userId: testUser.id,
           bookingDate: new Date('2024-12-20'),
           totalAmount: 450.00,
