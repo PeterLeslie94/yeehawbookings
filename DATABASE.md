@@ -4,20 +4,21 @@
 This document contains the complete database schema for the Nightclub Booking System, including all tables, relationships, and type definitions.
 
 ## Database Provider
-- **Provider**: Neon PostgreSQL
+- **Provider**: Railway PostgreSQL
 - **ORM**: Prisma
-- **Connection**: Serverless PostgreSQL
+- **Connection**: PostgreSQL
 
 ## Schema Status
 ✅ **Status**: Schema defined, awaiting database connection
 
 ## Setup Instructions
 
-### 1. Create Neon Database
-1. Sign up at [Neon Console](https://console.neon.tech)
+### 1. Create Railway Database
+1. Sign up at [Railway](https://railway.app)
 2. Create a new project
-3. Copy the connection string
-4. Update `.env` file with your DATABASE_URL
+3. Add PostgreSQL service from the Railway dashboard
+4. Copy the connection string from the PostgreSQL service settings
+5. Update `.env` file with your DATABASE_URL
 
 ### 2. Run Migrations
 ```bash
@@ -195,7 +196,7 @@ const isBlackoutDate = await prisma.blackoutDate.findFirst({
 - Consider pagination for large result sets
 
 ## Backup & Recovery
-- Neon provides automatic backups
-- Point-in-time recovery available
+- Railway provides automatic backups
+- Point-in-time recovery available through Railway dashboard
 - Consider implementing soft deletes for critical data
 - Regular exports for compliance
