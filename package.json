@@ -6,26 +6,41 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.10.0",
+    "@neondatabase/serverless": "^1.0.1",
+    "@prisma/client": "^6.13.0",
     "@types/node": "20.14.10",
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
+    "bcryptjs": "^3.0.2",
     "contentful": "^11.7.2",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.5",
     "next": "14.2.5",
+    "next-auth": "^4.24.11",
+    "prisma": "^6.13.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "sharp": "^0.34.2",
     "typescript": "5.5.3"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.3.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jest": "^30.0.0",
     "autoprefixer": "^10.4.21",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
     "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.17",
+    "ts-jest": "^29.4.1"
   }
 }
