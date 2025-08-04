@@ -9,7 +9,11 @@ This document contains the complete database schema for the Nightclub Booking Sy
 - **Connection**: PostgreSQL
 
 ## Schema Status
-✅ **Status**: Schema defined, awaiting database connection
+✅ **Status**: Fully implemented and operational
+- Database connected to Railway PostgreSQL
+- All migrations applied successfully
+- 15+ tables created and tested
+- 45 integration tests written (39 passing)
 
 ## Setup Instructions
 
@@ -132,6 +136,29 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient()
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 ```
 
+## Migration History
+```
+└─ 20250804144524_init/
+   └─ migration.sql (initial schema creation)
+```
+
+## Table Relationships
+```
+User (1) -----> (N) Booking
+User (1) -----> (N) Account (OAuth)
+User (1) -----> (N) Session
+
+Booking (1) -----> (N) BookingItem
+Booking (N) <----- (1) PromoCode
+
+Package (1) -----> (N) PackagePricing
+Package (1) -----> (N) PackageAvailability
+Package (1) -----> (N) BookingItem
+
+Extra (1) -----> (N) ExtraAvailability
+Extra (1) -----> (N) BookingItem
+```
+
 ## Common Queries
 
 ### Find available packages for a date
@@ -186,6 +213,62 @@ const booking = await prisma.booking.create({
 ```typescript
 const isBlackoutDate = await prisma.blackoutDate.findFirst({
   where: { date: targetDate }
+})
+```
+
+### Get user with bookings
+```typescript
+const userWithBookings = await prisma.user.findUnique({
+  where: { email: 'user@example.com' },
+  include: {
+    bookings: {
+      orderBy: { bookingDate: 'desc' },
+      include: {
+        items: {
+          include: {
+            package: true,
+            extra: true
+          }
+        }
+      }
+    }
+  }
+})
+```
+
+### Update package availability after booking
+```typescript
+await prisma.packageAvailability.update({
+  where: {
+    packageId_date: {
+      packageId: packageId,
+      date: bookingDate
+    }
+  },
+  data: {
+    availableQuantity: {
+      decrement: quantity
+    }
+  }
+})
+```
+
+### Validate promo code
+```typescript
+const promoCode = await prisma.promoCode.findFirst({
+  where: {
+    code: code,
+    isActive: true,
+    validFrom: { lte: new Date() },
+    OR: [
+      { validUntil: null },
+      { validUntil: { gte: new Date() } }
+    ],
+    OR: [
+      { usageLimit: null },
+      { usageCount: { lt: prisma.promoCode.fields.usageLimit } }
+    ]
+  }
 })
 ```
 
