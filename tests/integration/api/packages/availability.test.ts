@@ -60,12 +60,11 @@ describe('GET /api/packages/availability', () => {
       }
     });
 
-    // Set test date to next Friday
-    testDate = new Date();
-    const dayOfWeek = testDate.getDay();
-    const daysUntilFriday = (5 - dayOfWeek + 7) % 7 || 7;
-    testDate.setDate(testDate.getDate() + daysUntilFriday);
-    testDate.setHours(0, 0, 0, 0);
+    // Set test date to next Friday in UTC
+    const now = new Date();
+    const currentDay = now.getUTCDay();
+    const daysUntilFriday = (5 - currentDay + 7) % 7 || 7;
+    testDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntilFriday));
   });
 
   afterAll(async () => {
@@ -80,6 +79,7 @@ describe('GET /api/packages/availability', () => {
           packageId: vipPackage.id,
           date: testDate,
           isAvailable: true,
+          totalQuantity: 5,
           availableQuantity: 3
         }
       });
@@ -89,6 +89,7 @@ describe('GET /api/packages/availability', () => {
           packageId: tablePackage.id,
           date: testDate,
           isAvailable: true,
+          totalQuantity: 10,
           availableQuantity: 5
         }
       });
@@ -124,6 +125,7 @@ describe('GET /api/packages/availability', () => {
           packageId: vipPackage.id,
           date: testDate,
           isAvailable: true,
+          totalQuantity: 5,
           availableQuantity: 3
         }
       });
@@ -133,6 +135,7 @@ describe('GET /api/packages/availability', () => {
           packageId: inactivePackage.id,
           date: testDate,
           isAvailable: true,
+          totalQuantity: 3,
           availableQuantity: 2
         }
       });
@@ -143,8 +146,12 @@ describe('GET /api/packages/availability', () => {
       const data = await response.json();
 
       expect(response.status).toBe(200);
-      expect(data.availability).toHaveLength(1);
-      expect(data.availability[0].packageId).toBe(vipPackage.id);
+      expect(data.availability).toHaveLength(2); // Both active packages
+      
+      const packageIds = data.availability.map((a: any) => a.packageId);
+      expect(packageIds).toContain(vipPackage.id);
+      expect(packageIds).toContain(tablePackage.id);
+      expect(packageIds).not.toContain(inactivePackage.id);
     });
   });
 
@@ -213,6 +220,7 @@ describe('GET /api/packages/availability', () => {
           packageId: vipPackage.id,
           date: testDate,
           isAvailable: true,
+          totalQuantity: 5,
           availableQuantity: 3
         }
       });
@@ -237,6 +245,7 @@ describe('GET /api/packages/availability', () => {
           packageId: vipPackage.id,
           date: testDate,
           isAvailable: true,
+          totalQuantity: 5,
           availableQuantity: 3
         }
       });
@@ -267,6 +276,7 @@ describe('GET /api/packages/availability', () => {
           packageId: vipPackage.id,
           date: testDate,
           isAvailable: true,
+          totalQuantity: 5,
           availableQuantity: 3
         }
       });
@@ -305,18 +315,21 @@ describe('GET /api/packages/availability', () => {
             packageId: zPackage.id,
             date: testDate,
             isAvailable: true,
+            totalQuantity: 5,
             availableQuantity: 2
           },
           {
             packageId: vipPackage.id,
             date: testDate,
             isAvailable: true,
+            totalQuantity: 5,
             availableQuantity: 3
           },
           {
             packageId: tablePackage.id,
             date: testDate,
             isAvailable: true,
+            totalQuantity: 10,
             availableQuantity: 5
           }
         ]

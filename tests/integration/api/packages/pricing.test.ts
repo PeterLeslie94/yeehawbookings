@@ -61,17 +61,13 @@ describe('GET /api/packages/pricing', () => {
       }
     });
 
-    // Set test dates to next Friday and Saturday
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const daysUntilFriday = (5 - dayOfWeek + 7) % 7 || 7;
+    // Set test dates to next Friday and Saturday in UTC
+    const now = new Date();
+    const currentDay = now.getUTCDay();
+    const daysUntilFriday = (5 - currentDay + 7) % 7 || 7;
     
-    fridayDate = new Date();
-    fridayDate.setDate(today.getDate() + daysUntilFriday);
-    fridayDate.setHours(0, 0, 0, 0);
-    
-    saturdayDate = new Date(fridayDate);
-    saturdayDate.setDate(fridayDate.getDate() + 1);
+    fridayDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntilFriday));
+    saturdayDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntilFriday + 1));
   });
 
   afterAll(async () => {
@@ -282,8 +278,7 @@ describe('GET /api/packages/pricing', () => {
     });
 
     it('should allow past dates for historical pricing lookup', async () => {
-      const lastFriday = new Date(fridayDate);
-      lastFriday.setDate(fridayDate.getDate() - 7);
+      const lastFriday = new Date(fridayDate.getTime() - 7 * 24 * 60 * 60 * 1000);
 
       await prisma.packagePricing.create({
         data: {

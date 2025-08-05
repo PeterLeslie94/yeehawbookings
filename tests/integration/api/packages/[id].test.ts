@@ -56,17 +56,13 @@ describe('GET /api/packages/[id]', () => {
       }
     });
 
-    // Set test dates to next Friday and Saturday
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const daysUntilFriday = (5 - dayOfWeek + 7) % 7 || 7;
+    // Set test dates to next Friday and Saturday in UTC
+    const now = new Date();
+    const currentDay = now.getUTCDay();
+    const daysUntilFriday = (5 - currentDay + 7) % 7 || 7;
     
-    fridayDate = new Date();
-    fridayDate.setDate(today.getDate() + daysUntilFriday);
-    fridayDate.setHours(0, 0, 0, 0);
-    
-    saturdayDate = new Date(fridayDate);
-    saturdayDate.setDate(fridayDate.getDate() + 1);
+    fridayDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntilFriday));
+    saturdayDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntilFriday + 1));
   });
 
   afterAll(async () => {
@@ -131,12 +127,14 @@ describe('GET /api/packages/[id]', () => {
             packageId: testPackage.id,
             date: fridayDate,
             isAvailable: true,
+            totalQuantity: 5,
             availableQuantity: 3
           },
           {
             packageId: testPackage.id,
             date: saturdayDate,
             isAvailable: true,
+            totalQuantity: 5,
             availableQuantity: 2
           }
         ]
@@ -192,6 +190,7 @@ describe('GET /api/packages/[id]', () => {
           packageId: testPackage.id,
           date: fridayDate,
           isAvailable: true,
+          totalQuantity: 5,
           availableQuantity: 3
         }
       });
@@ -215,9 +214,8 @@ describe('GET /api/packages/[id]', () => {
     });
 
     it('should only include future dates for availability and pricing', async () => {
-      const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 7);
-      pastDate.setHours(0, 0, 0, 0);
+      const pastDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      pastDate.setUTCHours(0, 0, 0, 0);
 
       // Create past and future records
       await prisma.packageAvailability.createMany({
@@ -226,12 +224,14 @@ describe('GET /api/packages/[id]', () => {
             packageId: testPackage.id,
             date: pastDate,
             isAvailable: true,
+            totalQuantity: 10,
             availableQuantity: 5
           },
           {
             packageId: testPackage.id,
             date: fridayDate,
             isAvailable: true,
+            totalQuantity: 5,
             availableQuantity: 3
           }
         ]
@@ -333,8 +333,7 @@ describe('GET /api/packages/[id]', () => {
     });
 
     it('should sort availability and pricing by date ascending', async () => {
-      const nextFriday = new Date(fridayDate);
-      nextFriday.setDate(fridayDate.getDate() + 7);
+      const nextFriday = new Date(fridayDate.getTime() + 7 * 24 * 60 * 60 * 1000);
 
       await prisma.packageAvailability.createMany({
         data: [
@@ -342,18 +341,21 @@ describe('GET /api/packages/[id]', () => {
             packageId: testPackage.id,
             date: nextFriday,
             isAvailable: true,
+            totalQuantity: 5,
             availableQuantity: 4
           },
           {
             packageId: testPackage.id,
             date: fridayDate,
             isAvailable: true,
+            totalQuantity: 5,
             availableQuantity: 3
           },
           {
             packageId: testPackage.id,
             date: saturdayDate,
             isAvailable: true,
+            totalQuantity: 5,
             availableQuantity: 2
           }
         ]

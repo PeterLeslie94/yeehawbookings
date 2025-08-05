@@ -86,13 +86,15 @@ model Booking {
 }
 
 model Package {
-  id          String                @id @default(cuid())
-  name        String
-  description String
-  inclusions  String[]
-  isActive    Boolean               @default(true)
-  createdAt   DateTime              @default(now())
-  updatedAt   DateTime              @updatedAt
+  id           String                @id @default(cuid())
+  name         String
+  description  String
+  inclusions   String[]
+  maxGuests    Int
+  defaultPrice Float?
+  isActive     Boolean               @default(true)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
 
   pricing      PackagePricing[]
   availability PackageAvailability[]
