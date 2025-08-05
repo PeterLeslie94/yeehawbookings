@@ -24,7 +24,7 @@ describe('DateSelection', () => {
   });
 
   describe('Calendar Display', () => {
-    it('should render calendar showing only Fridays and Saturdays', async () => {
+    it('should render calendar with all weekday labels', async () => {
       // Arrange
       mockFetch
         .mockResolvedValueOnce({
@@ -44,13 +44,12 @@ describe('DateSelection', () => {
         expect(screen.queryByText('Loading available dates...')).not.toBeInTheDocument();
       });
 
-      // Assert - Check that only Friday and Saturday labels are present
+      // Assert - Check that all day labels are present
       const dayLabels = screen.getAllByTestId(/^day-label-/);
       const dayTexts = dayLabels.map(label => label.textContent);
       
-      // Should only show Fri and Sat
-      expect(dayTexts.filter(day => day === 'Fri' || day === 'Sat')).toHaveLength(2);
-      expect(dayTexts.filter(day => !['Fri', 'Sat'].includes(day!))).toHaveLength(0);
+      // Should show all days of the week
+      expect(dayTexts).toEqual(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
     });
 
     it('should display dates starting from today onwards', async () => {
@@ -73,8 +72,8 @@ describe('DateSelection', () => {
         expect(screen.queryByText('Loading available dates...')).not.toBeInTheDocument();
       });
 
-      // Assert - Should not show past dates
-      const dateButtons = screen.getAllByRole('button', { name: /^\d{1,2}$/ });
+      // Assert - Should show date buttons
+      const dateButtons = screen.getAllByTestId(/^date-/);
       expect(dateButtons.length).toBeGreaterThan(0);
     });
   });
@@ -94,7 +93,21 @@ describe('DateSelection', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ availableDates: [] }),
+          json: async () => ({ 
+            availableDates: [{
+              date: blackoutDate,
+              dayOfWeek: 'Friday',
+              cutoffTime: '23:00',
+              cutoffTimeUK: '11:00 PM',
+              isBlackedOut: true,
+              isPastCutoff: false,
+              blackoutReason: 'Private event',
+              timezone: 'Europe/London',
+              formattedDate: 'Friday, 8th August'
+            }],
+            timezone: 'Europe/London',
+            currentTimeUK: '2025-08-05 12:00:00 BST'
+          }),
         });
 
       // Act
@@ -125,7 +138,21 @@ describe('DateSelection', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ availableDates: [] }),
+          json: async () => ({ 
+            availableDates: [{
+              date: blackoutDate,
+              dayOfWeek: 'Friday',
+              cutoffTime: '23:00',
+              cutoffTimeUK: '11:00 PM',
+              isBlackedOut: true,
+              isPastCutoff: false,
+              blackoutReason: reason,
+              timezone: 'Europe/London',
+              formattedDate: 'Friday, 8th August'
+            }],
+            timezone: 'Europe/London',
+            currentTimeUK: '2025-08-05 12:00:00 BST'
+          }),
         });
 
       // Act
@@ -135,8 +162,8 @@ describe('DateSelection', () => {
         expect(screen.queryByText('Loading available dates...')).not.toBeInTheDocument();
       });
 
-      const blackoutButton = screen.getByTestId(`date-${blackoutDate}`);
-      fireEvent.mouseEnter(blackoutButton);
+      const blackoutDateElement = screen.getByTestId(`date-${blackoutDate}`).parentElement;
+      fireEvent.mouseEnter(blackoutDateElement);
 
       // Assert
       await waitFor(() => {
@@ -163,8 +190,16 @@ describe('DateSelection', () => {
           json: async () => ({ 
             availableDates: [{
               date: format(addDays(thursday, 1), 'yyyy-MM-dd'),
-              cutoffTime: '23:00'
-            }]
+              dayOfWeek: 'Friday',
+              cutoffTime: '23:00',
+              cutoffTimeUK: '11:00 PM',
+              isBlackedOut: false,
+              isPastCutoff: true,
+              timezone: 'Europe/London',
+              formattedDate: 'Friday, ' + format(addDays(thursday, 1), 'do MMMM')
+            }],
+            timezone: 'Europe/London',
+            currentTimeUK: format(pastCutoff, 'yyyy-MM-dd HH:mm:ss') + ' BST'
           }),
         });
 
@@ -260,9 +295,16 @@ describe('DateSelection', () => {
           json: async () => ({ 
             availableDates: [{
               date: fridayDate,
+              dayOfWeek: 'Friday',
               cutoffTime: '23:00',
-              timezone: ukTimeZone
-            }]
+              cutoffTimeUK: '11:00 PM',
+              isBlackedOut: false,
+              isPastCutoff: false,
+              timezone: ukTimeZone,
+              formattedDate: 'Friday, 8th August'
+            }],
+            timezone: ukTimeZone,
+            currentTimeUK: '2025-08-05 12:00:00 BST'
           }),
         });
 
@@ -365,9 +407,18 @@ describe('DateSelection', () => {
         .mockResolvedValueOnce({
           ok: true,
           json: async () => ({ 
-            availableDates: [
-              { date: fridayDate, cutoffTime: '23:00' }
-            ]
+            availableDates: [{
+              date: fridayDate,
+              dayOfWeek: 'Friday',
+              cutoffTime: '23:00',
+              cutoffTimeUK: '11:00 PM',
+              isBlackedOut: false,
+              isPastCutoff: false,
+              timezone: 'Europe/London',
+              formattedDate: 'Friday, 8th August'
+            }],
+            timezone: 'Europe/London',
+            currentTimeUK: '2025-08-05 12:00:00 BST'
           }),
         });
 
@@ -422,7 +473,7 @@ describe('DateSelection', () => {
   });
 
   describe('Loading and Error States', () => {
-    it('should show loading state while fetching data', async () => {
+    it('should show loading state while fetching data', () => {
       // Arrange
       mockFetch
         .mockImplementation(() => new Promise(() => {})); // Never resolves
@@ -446,7 +497,7 @@ describe('DateSelection', () => {
       // Assert
       await waitFor(() => {
         expect(screen.getByText(/Error loading dates/)).toBeInTheDocument();
-        expect(screen.getByText('Please try again')).toBeInTheDocument();
+        expect(screen.getByText('Try again')).toBeInTheDocument();
       });
     });
 
@@ -470,7 +521,7 @@ describe('DateSelection', () => {
         expect(screen.getByText(/Error loading dates/)).toBeInTheDocument();
       });
 
-      const retryButton = screen.getByText('Please try again');
+      const retryButton = screen.getByText('Try again');
       fireEvent.click(retryButton);
 
       // Assert
@@ -504,7 +555,7 @@ describe('DateSelection', () => {
       const calendar = screen.getByRole('region', { name: /date selection/i });
       expect(calendar).toBeInTheDocument();
       
-      const dateButtons = screen.getAllByRole('button', { name: /^\d{1,2}/ });
+      const dateButtons = screen.getAllByTestId(/^date-/);
       dateButtons.forEach(button => {
         expect(button).toHaveAttribute('aria-label');
       });

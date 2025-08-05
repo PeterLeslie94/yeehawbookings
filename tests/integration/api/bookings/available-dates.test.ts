@@ -1,19 +1,40 @@
 import { prisma } from '@/app/lib/prisma';
-import { GET } from '@/app/api/bookings/available-dates/route';
-import { NextRequest } from 'next/server';
 import { format, addDays, setHours, setMinutes } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 
+// Mock Next.js server components
+jest.mock('next/server', () => ({
+  NextRequest: class {
+    nextUrl: any;
+    constructor(url: URL) {
+      this.nextUrl = {
+        searchParams: url.searchParams
+      };
+    }
+  },
+  NextResponse: {
+    json: (data: any, init?: any) => ({
+      json: async () => data,
+      status: init?.status || 200,
+      headers: new Map(Object.entries(init?.headers || {}))
+    })
+  }
+}));
+
+// Import after mocking
+const { GET } = require('@/app/api/bookings/available-dates/route');
+const { NextRequest } = require('next/server');
+
 // Mock the response object
-function createMockRequest(url: string): NextRequest {
+function createMockRequest(url: string): any {
   return new NextRequest(new URL(url, 'http://localhost:3000'));
 }
 
 describe('GET /api/bookings/available-dates', () => {
   beforeEach(async () => {
     // Clean up test data
-    await prisma.blackoutDate.deleteMany();
     await prisma.dailyCutoffTime.deleteMany();
+    await prisma.blackoutDate.deleteMany();
   });
 
   afterAll(async () => {
@@ -158,8 +179,9 @@ describe('GET /api/bookings/available-dates', () => {
       
       await prisma.dailyCutoffTime.create({
         data: {
-          date: new Date(fridayDate),
+          dayOfWeek: 5, // Friday
           cutoffTime: '22:00', // 10 PM custom cutoff
+          isActive: true,
         },
       });
 
@@ -186,8 +208,9 @@ describe('GET /api/bookings/available-dates', () => {
       if (today.getDay() === 5 || today.getDay() === 6) {
         await prisma.dailyCutoffTime.create({
           data: {
-            date: new Date(todayDate),
+            dayOfWeek: today.getDay(),
             cutoffTime: pastTime,
+            isActive: true,
           },
         });
 
@@ -228,8 +251,9 @@ describe('GET /api/bookings/available-dates', () => {
       
       await prisma.dailyCutoffTime.create({
         data: {
-          date: new Date(fridayDate),
+          dayOfWeek: 5, // Friday
           cutoffTime: '23:00',
+          isActive: true,
         },
       });
 
@@ -355,7 +379,7 @@ describe('GET /api/bookings/available-dates', () => {
 
       // Assert - Should limit to reasonable number of dates
       expect(response.status).toBe(200);
-      expect(data.availableDates.length).toBeLessThanOrEqual(100); // Max ~100 Fri/Sat in 1 year
+      expect(data.availableDates.length).toBeLessThanOrEqual(110); // Max ~104-106 Fri/Sat in 1 year
     });
   });
 });

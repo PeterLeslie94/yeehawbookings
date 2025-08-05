@@ -1,10 +1,31 @@
 import { prisma } from '@/app/lib/prisma';
-import { GET } from '@/app/api/bookings/blackout-dates/route';
-import { NextRequest } from 'next/server';
 import { format, addDays } from 'date-fns';
 
+// Mock Next.js server components
+jest.mock('next/server', () => ({
+  NextRequest: class {
+    nextUrl: any;
+    constructor(url: URL) {
+      this.nextUrl = {
+        searchParams: url.searchParams
+      };
+    }
+  },
+  NextResponse: {
+    json: (data: any, init?: any) => ({
+      json: async () => data,
+      status: init?.status || 200,
+      headers: new Map(Object.entries(init?.headers || {}))
+    })
+  }
+}));
+
+// Import after mocking
+const { GET } = require('@/app/api/bookings/blackout-dates/route');
+const { NextRequest } = require('next/server');
+
 // Mock the response object
-function createMockRequest(url: string): NextRequest {
+function createMockRequest(url: string): any {
   return new NextRequest(new URL(url, 'http://localhost:3000'));
 }
 

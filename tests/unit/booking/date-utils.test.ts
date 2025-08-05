@@ -77,7 +77,7 @@ describe('Date Utilities', () => {
   describe('isDateAvailable', () => {
     it('should return true for available date', () => {
       // Arrange
-      const date = new Date('2024-03-15');
+      const date = addDays(new Date(), 7); // Future date
       const blackoutDates: Date[] = [];
       const cutoffTime = '23:00';
 
