@@ -60,3 +60,47 @@ export interface CalendarDate {
   blackoutReason?: string;
   cutoffTime: string;
 }
+
+export interface ExtraSelectionProps {
+  selectedDate: string; // YYYY-MM-DD format
+  onExtrasSelect: (extras: SelectedExtra[]) => void;
+  initialExtras?: SelectedExtra[];
+  className?: string;
+}
+
+export interface SelectedExtra {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  totalPrice: number;
+}
+
+export interface Extra {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  isActive: boolean;
+  availability?: ExtraAvailability;
+}
+
+export interface ExtraAvailability {
+  id: string;
+  extraId: string;
+  date: Date | string;
+  totalQuantity: number;
+  availableQuantity: number;
+  isAvailable: boolean;
+}
+
+export interface ExtrasResponse {
+  extras: Extra[];
+  selectedDate?: string;
+}
+
+export interface ExtraAvailabilityResponse {
+  extras: Extra[];
+  date: string;
+  timezone: string;
+}
