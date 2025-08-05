@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import DateSelection from '@/app/components/booking/DateSelection';
+import PackageSelection from '@/app/components/booking/PackageSelection';
 import ExtraSelection from '@/app/components/booking/ExtraSelection';
 import { CustomerDetails } from '@/app/components/booking/CustomerDetails';
 import { SelectedDate, SelectedExtra, CustomerFormData } from '@/app/types/booking';
@@ -11,14 +12,17 @@ type BookingStep = 'date' | 'packages' | 'extras' | 'details' | 'payment' | 'con
 export default function BookingPage() {
   const [currentStep, setCurrentStep] = useState<BookingStep>('date');
   const [selectedDate, setSelectedDate] = useState<SelectedDate | null>(null);
-  const [selectedPackages, setSelectedPackages] = useState<any[]>([]); // TODO: Add package selection
+  const [selectedPackages, setSelectedPackages] = useState<{ packageId: number; quantity: number; price: number }[]>([]);
   const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
   const [customerDetails, setCustomerDetails] = useState<CustomerFormData | null>(null);
 
   const handleDateSelect = (date: SelectedDate) => {
     setSelectedDate(date);
-    setCurrentStep('packages'); // TODO: Implement package selection
-    // For now, skip to extras
+    setCurrentStep('packages');
+  };
+
+  const handlePackageSelect = (packages: { packageId: number; quantity: number; price: number }[]) => {
+    setSelectedPackages(packages);
     setCurrentStep('extras');
   };
 
@@ -40,15 +44,15 @@ export default function BookingPage() {
   };
 
   const calculateSubtotal = () => {
-    // TODO: Add package prices
+    const packagesTotal = selectedPackages.reduce((sum, pkg) => sum + (pkg.price * pkg.quantity), 0);
     const extrasTotal = selectedExtras.reduce((sum, extra) => sum + extra.totalPrice, 0);
-    return extrasTotal;
+    return packagesTotal + extrasTotal;
   };
 
   const renderStepIndicator = () => {
     const steps = [
       { id: 'date', label: 'Select Date' },
-      { id: 'packages', label: 'Choose Package', disabled: true }, // TODO: Enable when implemented
+      { id: 'packages', label: 'Choose Package' },
       { id: 'extras', label: 'Add Extras' },
       { id: 'details', label: 'Your Details' },
       { id: 'payment', label: 'Payment', disabled: true }, // TODO: Enable when implemented
@@ -93,6 +97,17 @@ export default function BookingPage() {
           />
         );
       
+      case 'packages':
+        return selectedDate ? (
+          <PackageSelection
+            selectedDate={selectedDate.date}
+            maxGuests={50}
+            onNext={handlePackageSelect}
+            onBack={handleBack}
+            initialPackages={selectedPackages}
+          />
+        ) : null;
+      
       case 'extras':
         return selectedDate ? (
           <ExtraSelection
@@ -119,8 +134,11 @@ export default function BookingPage() {
 
   const handleBack = () => {
     switch (currentStep) {
-      case 'extras':
+      case 'packages':
         setCurrentStep('date');
+        break;
+      case 'extras':
+        setCurrentStep('packages');
         break;
       case 'details':
         setCurrentStep('extras');
