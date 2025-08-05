@@ -1,6 +1,26 @@
-import { POST } from '@/app/api/promo-codes/validate/route';
 import { prisma } from '@/app/lib/prisma';
-import { NextRequest } from 'next/server';
+
+// Mock Next.js server components
+jest.mock('next/server', () => ({
+  NextRequest: class {
+    constructor(url: string, init?: any) {
+      this.url = url;
+      this.method = init?.method || 'GET';
+      this.headers = new Map(Object.entries(init?.headers || {}));
+      this.body = init?.body;
+    }
+    async json() {
+      return JSON.parse(this.body);
+    }
+  },
+  NextResponse: {
+    json: (data: any, init?: any) => ({
+      json: async () => data,
+      status: init?.status || 200,
+      headers: new Map(Object.entries(init?.headers || {}))
+    })
+  }
+}));
 
 // Mock Prisma
 jest.mock('@/app/lib/prisma', () => ({
@@ -11,6 +31,10 @@ jest.mock('@/app/lib/prisma', () => ({
     },
   },
 }));
+
+// Import after mocking
+const { POST } = require('@/app/api/promo-codes/validate/route');
+const { NextRequest } = require('next/server');
 
 describe('POST /api/promo-codes/validate', () => {
   beforeEach(() => {
@@ -318,6 +342,8 @@ describe('POST /api/promo-codes/validate', () => {
         validFrom: new Date('2024-01-01'),
         validUntil: null,
         isActive: true,
+        usageLimit: null,
+        usageCount: 0,
       };
 
       (prisma.promoCode.findFirst as jest.Mock).mockResolvedValue(mockPromoCode);
@@ -349,6 +375,8 @@ describe('POST /api/promo-codes/validate', () => {
         validFrom: new Date('2024-01-01'),
         validUntil: null,
         isActive: true,
+        usageLimit: null,
+        usageCount: 0,
       };
 
       (prisma.promoCode.findFirst as jest.Mock).mockResolvedValue(mockPromoCode);
@@ -378,6 +406,8 @@ describe('POST /api/promo-codes/validate', () => {
         validFrom: new Date('2024-01-01'),
         validUntil: null,
         isActive: true,
+        usageLimit: null,
+        usageCount: 0,
       };
 
       (prisma.promoCode.findFirst as jest.Mock).mockResolvedValue(mockPromoCode);

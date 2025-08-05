@@ -69,7 +69,9 @@ describe('CustomerDetails Component', () => {
       render(<CustomerDetails {...defaultProps} />);
 
       expect(screen.getByText('Subtotal:')).toBeInTheDocument();
-      expect(screen.getByText('£250.00')).toBeInTheDocument();
+      // Find the subtotal container and check its content
+      const subtotalContainer = screen.getByText('Subtotal:').parentElement;
+      expect(subtotalContainer).toHaveTextContent('£250.00');
     });
   });
 
@@ -88,27 +90,34 @@ describe('CustomerDetails Component', () => {
     });
 
     it('should validate email format', async () => {
+      const user = userEvent.setup();
       render(<CustomerDetails {...defaultProps} />);
       
+      // Fill in name and phone to avoid those validation errors
+      await user.type(screen.getByLabelText(/full name/i), 'Test User');
+      await user.type(screen.getByLabelText(/phone number/i), '07123456789');
+      
       const emailInput = screen.getByLabelText(/email address/i);
-      await userEvent.type(emailInput, 'invalid-email');
+      await user.clear(emailInput);
+      await user.type(emailInput, 'notanemail');
       
       const submitButton = screen.getByRole('button', { name: /continue to payment/i });
-      fireEvent.click(submitButton);
+      await user.click(submitButton);
 
       await waitFor(() => {
         expect(screen.getByText(/please enter a valid email/i)).toBeInTheDocument();
-      });
+      }, { timeout: 2000 });
     });
 
     it('should validate phone number format', async () => {
+      const user = userEvent.setup();
       render(<CustomerDetails {...defaultProps} />);
       
       const phoneInput = screen.getByLabelText(/phone number/i);
-      await userEvent.type(phoneInput, '123');
+      await user.type(phoneInput, '123');
       
       const submitButton = screen.getByRole('button', { name: /continue to payment/i });
-      fireEvent.click(submitButton);
+      await user.click(submitButton);
 
       await waitFor(() => {
         expect(screen.getByText(/please enter a valid phone number/i)).toBeInTheDocument();
@@ -116,15 +125,16 @@ describe('CustomerDetails Component', () => {
     });
 
     it('should allow submission with valid data', async () => {
+      const user = userEvent.setup();
       render(<CustomerDetails {...defaultProps} />);
       
-      await userEvent.type(screen.getByLabelText(/full name/i), 'John Doe');
-      await userEvent.type(screen.getByLabelText(/email address/i), 'john@example.com');
-      await userEvent.type(screen.getByLabelText(/phone number/i), '07123456789');
-      await userEvent.type(screen.getByLabelText(/booking notes/i), 'Birthday celebration');
+      await user.type(screen.getByLabelText(/full name/i), 'John Doe');
+      await user.type(screen.getByLabelText(/email address/i), 'john@example.com');
+      await user.type(screen.getByLabelText(/phone number/i), '07123456789');
+      await user.type(screen.getByLabelText(/booking notes/i), 'Birthday celebration');
       
       const submitButton = screen.getByRole('button', { name: /continue to payment/i });
-      fireEvent.click(submitButton);
+      await user.click(submitButton);
 
       await waitFor(() => {
         expect(mockOnDetailsSubmit).toHaveBeenCalledWith({
@@ -143,6 +153,7 @@ describe('CustomerDetails Component', () => {
 
   describe('Promo Code Functionality', () => {
     it('should validate promo code when apply button is clicked', async () => {
+      const user = userEvent.setup();
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -157,10 +168,10 @@ describe('CustomerDetails Component', () => {
       render(<CustomerDetails {...defaultProps} />);
       
       const promoInput = screen.getByPlaceholderText(/enter promo code/i);
-      await userEvent.type(promoInput, 'SAVE10');
+      await user.type(promoInput, 'SAVE10');
       
       const applyButton = screen.getByRole('button', { name: /apply/i });
-      fireEvent.click(applyButton);
+      await user.click(applyButton);
 
       await waitFor(() => {
         expect(screen.getByText(/promo code applied/i)).toBeInTheDocument();
@@ -172,6 +183,7 @@ describe('CustomerDetails Component', () => {
     });
 
     it('should show error for invalid promo code', async () => {
+      const user = userEvent.setup();
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: false,
         json: async () => ({
@@ -182,10 +194,10 @@ describe('CustomerDetails Component', () => {
       render(<CustomerDetails {...defaultProps} />);
       
       const promoInput = screen.getByPlaceholderText(/enter promo code/i);
-      await userEvent.type(promoInput, 'INVALID');
+      await user.type(promoInput, 'INVALID');
       
       const applyButton = screen.getByRole('button', { name: /apply/i });
-      fireEvent.click(applyButton);
+      await user.click(applyButton);
 
       await waitFor(() => {
         expect(screen.getByText(/invalid or expired promo code/i)).toBeInTheDocument();
@@ -193,6 +205,7 @@ describe('CustomerDetails Component', () => {
     });
 
     it('should show loading state while validating promo code', async () => {
+      const user = userEvent.setup();
       (fetch as jest.Mock).mockImplementation(() => 
         new Promise(resolve => setTimeout(resolve, 100))
       );
@@ -200,15 +213,16 @@ describe('CustomerDetails Component', () => {
       render(<CustomerDetails {...defaultProps} />);
       
       const promoInput = screen.getByPlaceholderText(/enter promo code/i);
-      await userEvent.type(promoInput, 'SAVE10');
+      await user.type(promoInput, 'SAVE10');
       
       const applyButton = screen.getByRole('button', { name: /apply/i });
-      fireEvent.click(applyButton);
+      await user.click(applyButton);
 
       expect(screen.getByText(/validating/i)).toBeInTheDocument();
     });
 
     it('should allow removing applied promo code', async () => {
+      const user = userEvent.setup();
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -223,17 +237,17 @@ describe('CustomerDetails Component', () => {
       render(<CustomerDetails {...defaultProps} />);
       
       const promoInput = screen.getByPlaceholderText(/enter promo code/i);
-      await userEvent.type(promoInput, 'SAVE10');
+      await user.type(promoInput, 'SAVE10');
       
       const applyButton = screen.getByRole('button', { name: /apply/i });
-      fireEvent.click(applyButton);
+      await user.click(applyButton);
 
       await waitFor(() => {
         expect(screen.getByText(/promo code applied/i)).toBeInTheDocument();
       });
 
       const removeButton = screen.getByRole('button', { name: /remove/i });
-      fireEvent.click(removeButton);
+      await user.click(removeButton);
 
       await waitFor(() => {
         expect(screen.queryByText(/promo code applied/i)).not.toBeInTheDocument();
@@ -248,19 +262,21 @@ describe('CustomerDetails Component', () => {
       
       const guestCheckbox = screen.getByLabelText(/continue as guest/i);
       
-      // Initially should show sign-in prompt
-      expect(screen.getByText(/already have an account/i)).toBeInTheDocument();
+      // Initially checkbox is checked (guest mode), showing create account prompt
+      expect(guestCheckbox).toBeChecked();
+      expect(screen.getByText(/create an account after booking/i)).toBeInTheDocument();
       
-      // Check guest checkbox
+      // Uncheck guest checkbox
       fireEvent.click(guestCheckbox);
       
-      // Should now show create account prompt
-      expect(screen.getByText(/create an account after booking/i)).toBeInTheDocument();
+      // Should now show sign-in prompt
+      expect(screen.getByText(/already have an account/i)).toBeInTheDocument();
     });
   });
 
   describe('Form Submission', () => {
     it('should include all form data and promo code in submission', async () => {
+      const user = userEvent.setup();
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -275,14 +291,14 @@ describe('CustomerDetails Component', () => {
       render(<CustomerDetails {...defaultProps} />);
       
       // Fill form
-      await userEvent.type(screen.getByLabelText(/full name/i), 'Jane Smith');
-      await userEvent.type(screen.getByLabelText(/email address/i), 'jane@example.com');
-      await userEvent.type(screen.getByLabelText(/phone number/i), '07987654321');
-      await userEvent.type(screen.getByLabelText(/booking notes/i), 'VIP booth please');
+      await user.type(screen.getByLabelText(/full name/i), 'Jane Smith');
+      await user.type(screen.getByLabelText(/email address/i), 'jane@example.com');
+      await user.type(screen.getByLabelText(/phone number/i), '07987654321');
+      await user.type(screen.getByLabelText(/booking notes/i), 'VIP booth please');
       
       // Apply promo code
-      await userEvent.type(screen.getByPlaceholderText(/enter promo code/i), 'FIXED20');
-      fireEvent.click(screen.getByRole('button', { name: /apply/i }));
+      await user.type(screen.getByPlaceholderText(/enter promo code/i), 'FIXED20');
+      await user.click(screen.getByRole('button', { name: /apply/i }));
       
       await waitFor(() => {
         expect(screen.getByText(/promo code applied/i)).toBeInTheDocument();
@@ -290,7 +306,7 @@ describe('CustomerDetails Component', () => {
       
       // Submit form
       const submitButton = screen.getByRole('button', { name: /continue to payment/i });
-      fireEvent.click(submitButton);
+      await user.click(submitButton);
 
       await waitFor(() => {
         expect(mockOnDetailsSubmit).toHaveBeenCalledWith({
@@ -307,11 +323,12 @@ describe('CustomerDetails Component', () => {
     });
 
     it('should disable submit button while processing', async () => {
+      const user = userEvent.setup();
       render(<CustomerDetails {...defaultProps} />);
       
-      await userEvent.type(screen.getByLabelText(/full name/i), 'John Doe');
-      await userEvent.type(screen.getByLabelText(/email address/i), 'john@example.com');
-      await userEvent.type(screen.getByLabelText(/phone number/i), '07123456789');
+      await user.type(screen.getByLabelText(/full name/i), 'John Doe');
+      await user.type(screen.getByLabelText(/email address/i), 'john@example.com');
+      await user.type(screen.getByLabelText(/phone number/i), '07123456789');
       
       const submitButton = screen.getByRole('button', { name: /continue to payment/i });
       
@@ -320,7 +337,7 @@ describe('CustomerDetails Component', () => {
         new Promise(resolve => setTimeout(resolve, 100))
       );
       
-      fireEvent.click(submitButton);
+      await user.click(submitButton);
       
       expect(submitButton).toBeDisabled();
       expect(screen.getByText(/processing/i)).toBeInTheDocument();

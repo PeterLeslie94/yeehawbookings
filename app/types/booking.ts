@@ -104,3 +104,47 @@ export interface ExtraAvailabilityResponse {
   date: string;
   timezone: string;
 }
+
+export interface CustomerDetailsProps {
+  onDetailsSubmit: (details: CustomerFormData) => void;
+  selectedDate: string;
+  subtotal: number;
+  initialDetails?: Partial<CustomerFormData>;
+  className?: string;
+}
+
+export interface CustomerFormData {
+  name: string;
+  email: string;
+  phone: string;
+  bookingNotes?: string;
+  isGuest: boolean;
+  promoCode: string | null;
+  discount: number;
+  finalAmount: number;
+}
+
+export interface PromoCodeValidation {
+  valid: boolean;
+  code?: string;
+  description?: string;
+  discountType?: 'PERCENTAGE' | 'FIXED_AMOUNT';
+  discountValue?: number;
+  discountAmount?: number;
+  error?: string;
+}
+
+export interface PromoCodeValidateRequest {
+  code: string;
+  subtotal: number;
+  bookingDate?: string;
+}
+
+export interface PromoCodeValidateResponse {
+  valid: boolean;
+  code: string;
+  description?: string;
+  discountType: 'PERCENTAGE' | 'FIXED_AMOUNT';
+  discountValue: number;
+  discountAmount: number;
+}
