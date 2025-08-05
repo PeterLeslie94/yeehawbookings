@@ -106,11 +106,11 @@ This document outlines the development plan for implementing a comprehensive nig
 **Goal**: Display packages with dynamic pricing and availability
 
 #### Tasks:
-- [ ] Create package selection UI
-- [ ] Implement quantity selectors
-- [ ] Show real-time availability
-- [ ] Display day-specific pricing
-- [ ] Add package details modal
+- [x] Create package selection UI
+- [x] Implement quantity selectors
+- [x] Show real-time availability
+- [x] Display day-specific pricing
+- [x] Add package details modal
 
 #### API Routes:
 - `GET /api/packages`
@@ -118,10 +118,10 @@ This document outlines the development plan for implementing a comprehensive nig
 - `GET /api/packages/pricing?date=YYYY-MM-DD`
 
 #### Tests to Write:
-- Package display tests
-- Pricing calculation tests
-- Availability check tests
-- Quantity validation tests
+- [x] Package display tests
+- [x] Pricing calculation tests
+- [x] Availability check tests
+- [x] Quantity validation tests
 
 ### 2.3 Extras Selection Step
 **Goal**: Allow selection of additional items
