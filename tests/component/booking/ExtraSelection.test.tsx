@@ -354,7 +354,7 @@ describe('ExtraSelection Component', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/Error loading extras:/)).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
       });
     });
 
@@ -370,10 +370,10 @@ describe('ExtraSelection Component', () => {
       render(<ExtraSelection {...defaultProps} />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
       });
 
-      await user.click(screen.getByRole('button', { name: /retry/i }));
+      await user.click(screen.getByRole('button', { name: /try again/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Premium Champagne Bottle')).toBeInTheDocument();
