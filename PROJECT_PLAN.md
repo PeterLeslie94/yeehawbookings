@@ -127,37 +127,37 @@ This document outlines the development plan for implementing a comprehensive nig
 **Goal**: Allow selection of additional items
 
 #### Tasks:
-- [ ] Create extras selection component
-- [ ] Implement quantity controls
-- [ ] Check real-time availability
-- [ ] Calculate running total
+- [x] Create extras selection component
+- [x] Implement quantity controls
+- [x] Check real-time availability
+- [x] Calculate running total
 
 #### API Routes:
 - `GET /api/extras`
 - `GET /api/extras/availability?date=YYYY-MM-DD`
 
 #### Tests to Write:
-- Extra selection tests
-- Total calculation tests
-- Availability validation tests
+- [x] Extra selection tests
+- [x] Total calculation tests
+- [x] Availability validation tests
 
 ### 2.4 Customer Details Step
 **Goal**: Collect customer information and apply discounts
 
 #### Tasks:
-- [ ] Create customer form with validation
-- [ ] Implement guest checkout option
-- [ ] Add booking notes field
-- [ ] Create promo code input and validation
-- [ ] Handle form state management
+- [x] Create customer form with validation
+- [x] Implement guest checkout option
+- [x] Add booking notes field
+- [x] Create promo code input and validation
+- [x] Handle form state management
 
 #### API Routes:
 - `POST /api/promo-codes/validate`
 
 #### Tests to Write:
-- Form validation tests
-- Promo code application tests
-- Guest checkout tests
+- [x] Form validation tests
+- [x] Promo code application tests
+- [x] Guest checkout tests
 
 ### 2.5 Payment Integration
 **Goal**: Secure payment processing with Stripe

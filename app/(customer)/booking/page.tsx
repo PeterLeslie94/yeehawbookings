@@ -5,6 +5,7 @@ import DateSelection from '@/app/components/booking/DateSelection';
 import PackageSelection from '@/app/components/booking/PackageSelection';
 import ExtraSelection from '@/app/components/booking/ExtraSelection';
 import { CustomerDetails } from '@/app/components/booking/CustomerDetails';
+import { PaymentStep } from '@/app/components/booking/PaymentStep';
 import { SelectedDate, SelectedExtra, CustomerFormData } from '@/app/types/booking';
 
 type BookingStep = 'date' | 'packages' | 'extras' | 'details' | 'payment' | 'confirmation';
@@ -15,6 +16,8 @@ export default function BookingPage() {
   const [selectedPackages, setSelectedPackages] = useState<{ packageId: number; quantity: number; price: number }[]>([]);
   const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
   const [customerDetails, setCustomerDetails] = useState<CustomerFormData | null>(null);
+  const [bookingId, setBookingId] = useState<string | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
 
   const handleDateSelect = (date: SelectedDate) => {
     setSelectedDate(date);
@@ -33,14 +36,33 @@ export default function BookingPage() {
 
   const handleDetailsSubmit = async (details: CustomerFormData) => {
     setCustomerDetails(details);
-    // TODO: Move to payment step
-    console.log('Booking details:', {
-      date: selectedDate,
-      packages: selectedPackages,
-      extras: selectedExtras,
-      customer: details
-    });
-    alert('Booking flow complete! Payment integration coming soon.');
+    
+    try {
+      // Create a booking in the database
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: selectedDate?.date,
+          packages: selectedPackages,
+          extras: selectedExtras,
+          customer: details,
+          totalAmount: calculateTotalWithDiscount(details.promoCodeData),
+          currency: 'usd',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create booking');
+      }
+
+      const booking = await response.json();
+      setBookingId(booking.id);
+      setCurrentStep('payment');
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      alert('Failed to create booking. Please try again.');
+    }
   };
 
   const calculateSubtotal = () => {
@@ -49,13 +71,33 @@ export default function BookingPage() {
     return packagesTotal + extrasTotal;
   };
 
+  const calculateTotalWithDiscount = (promoCodeData?: { 
+    discountType: 'percentage' | 'fixed_amount'; 
+    discountValue: number 
+  }) => {
+    const subtotal = calculateSubtotal();
+    if (!promoCodeData) return subtotal;
+
+    if (promoCodeData.discountType === 'percentage') {
+      return Math.round(subtotal * (1 - promoCodeData.discountValue / 100));
+    } else {
+      return Math.max(0, subtotal - promoCodeData.discountValue);
+    }
+  };
+
+  const handlePaymentComplete = (data: { paymentIntentId: string }) => {
+    setPaymentIntentId(data.paymentIntentId);
+    setCurrentStep('confirmation');
+  };
+
   const renderStepIndicator = () => {
     const steps = [
       { id: 'date', label: 'Select Date' },
       { id: 'packages', label: 'Choose Package' },
       { id: 'extras', label: 'Add Extras' },
       { id: 'details', label: 'Your Details' },
-      { id: 'payment', label: 'Payment', disabled: true }, // TODO: Enable when implemented
+      { id: 'payment', label: 'Payment' },
+      { id: 'confirmation', label: 'Confirmation' },
     ];
 
     return (
@@ -127,6 +169,42 @@ export default function BookingPage() {
           />
         ) : null;
       
+      case 'payment':
+        return bookingId && customerDetails ? (
+          <PaymentStep
+            bookingId={bookingId}
+            totalAmount={calculateTotalWithDiscount(customerDetails.promoCodeData)}
+            currency="USD"
+            originalAmount={customerDetails.promoCodeData ? calculateSubtotal() : undefined}
+            discountAmount={customerDetails.promoCodeData ? 
+              calculateSubtotal() - calculateTotalWithDiscount(customerDetails.promoCodeData) : undefined}
+            promoCode={customerDetails.promoCode}
+            onComplete={handlePaymentComplete}
+            onBack={() => setCurrentStep('details')}
+          />
+        ) : null;
+      
+      case 'confirmation':
+        return (
+          <div className="text-center py-8">
+            <div className="mb-4">
+              <svg className="w-16 h-16 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Payment Successful!</h2>
+            <p className="text-gray-600 mb-4">Your booking has been confirmed.</p>
+            <p className="text-sm text-gray-500">Booking ID: {bookingId}</p>
+            <p className="text-sm text-gray-500 mb-6">Payment ID: {paymentIntentId}</p>
+            <button
+              onClick={() => window.location.href = '/'}
+              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+            >
+              Return to Home
+            </button>
+          </div>
+        );
+      
       default:
         return <div>Step not implemented</div>;
     }
@@ -142,6 +220,9 @@ export default function BookingPage() {
         break;
       case 'details':
         setCurrentStep('extras');
+        break;
+      case 'payment':
+        setCurrentStep('details');
         break;
       default:
         break;

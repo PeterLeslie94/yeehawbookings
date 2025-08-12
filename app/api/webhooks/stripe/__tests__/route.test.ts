@@ -1,23 +1,29 @@
+// Mock the modules before importing
+jest.mock('@/app/lib/stripe.server', () => ({
+  stripe: {
+    webhooks: {
+      constructEvent: jest.fn(),
+    },
+  },
+}))
+
+jest.mock('@/app/lib/db.server', () => ({
+  db: {
+    booking: {
+      findFirst: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
+  },
+}))
+
 import { POST } from '../route'
 import { NextRequest } from 'next/server'
 import crypto from 'crypto'
 
-// Mock the modules that will be created during implementation
-const mockStripe = {
-  webhooks: {
-    constructEvent: jest.fn(),
-  },
-}
-
-const mockDb = {
-  booking: {
-    findFirst: jest.fn(),
-    update: jest.fn(),
-  },
-}
-
-jest.mock('@/app/lib/stripe.server', () => ({ stripe: mockStripe }))
-jest.mock('@/app/lib/db.server', () => ({ db: mockDb }))
+// Get mocked functions
+const mockStripe = require('@/app/lib/stripe.server').stripe
+const mockDb = require('@/app/lib/db.server').db
 
 describe('POST /api/webhooks/stripe', () => {
   beforeEach(() => {
@@ -29,9 +35,9 @@ describe('POST /api/webhooks/stripe', () => {
     const body = JSON.stringify(payload)
     const timestamp = Math.floor(Date.now() / 1000)
     
-    if (!signature) {
+    if (!signature && process.env.STRIPE_WEBHOOK_SECRET) {
       const signedPayload = `${timestamp}.${body}`
-      const secret = process.env.STRIPE_WEBHOOK_SECRET!
+      const secret = process.env.STRIPE_WEBHOOK_SECRET
       signature = crypto
         .createHmac('sha256', secret)
         .update(signedPayload)
@@ -173,6 +179,7 @@ describe('POST /api/webhooks/stripe', () => {
         object: {
           id: 'ch_test123',
           payment_intent: 'pi_test123',
+          amount: 15000,
           amount_refunded: 15000,
           metadata: {
             bookingId: 'booking-1',
@@ -182,9 +189,10 @@ describe('POST /api/webhooks/stripe', () => {
     }
 
     mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent)
-    mockDb.booking.findFirst.mockResolvedValue({
+    mockDb.booking.findUnique.mockResolvedValue({
       id: 'booking-1',
       stripePaymentIntentId: 'pi_test123',
+      status: 'CONFIRMED',
     })
     mockDb.booking.update.mockResolvedValue({
       id: 'booking-1',
@@ -371,9 +379,10 @@ describe('POST /api/webhooks/stripe', () => {
     }
 
     mockStripe.webhooks.constructEvent.mockReturnValue(mockEvent)
-    mockDb.booking.findFirst.mockResolvedValue({
+    mockDb.booking.findUnique.mockResolvedValue({
       id: 'booking-1',
       stripePaymentIntentId: 'pi_test123',
+      status: 'CONFIRMED',
     })
     mockDb.booking.update.mockResolvedValue({
       id: 'booking-1',
@@ -388,6 +397,7 @@ describe('POST /api/webhooks/stripe', () => {
     expect(mockDb.booking.update).toHaveBeenCalledWith({
       where: { id: 'booking-1' },
       data: {
+        status: 'CONFIRMED', // Keep existing status for partial refund
         stripePaymentStatus: 'partially_refunded',
         refundedAt: expect.any(Date),
         refundAmount: 5000,

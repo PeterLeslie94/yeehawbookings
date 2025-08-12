@@ -272,6 +272,16 @@ const promoCode = await prisma.promoCode.findFirst({
 })
 ```
 
+### Increment promo code usage
+```typescript
+await prisma.promoCode.update({
+  where: { id: promoCodeId },
+  data: {
+    usageCount: { increment: 1 }
+  }
+})
+```
+
 ## Performance Considerations
 - Connection pooling handled by Prisma
 - Indexes on: booking dates, user emails, package/extra availability

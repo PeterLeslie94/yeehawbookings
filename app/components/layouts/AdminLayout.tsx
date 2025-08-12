@@ -79,7 +79,11 @@ export default function AdminLayout({
           <AdminSidebar
             isOpen={isSidebarOpen}
             onClose={() => setIsSidebarOpen(false)}
-            user={session?.user}
+            user={session?.user ? {
+              name: session.user.name || undefined,
+              email: session.user.email || undefined,
+              role: session.user.role || undefined,
+            } : undefined}
           />
           
           {/* Main Content */}

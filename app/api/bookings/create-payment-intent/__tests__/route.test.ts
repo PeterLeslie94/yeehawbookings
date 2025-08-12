@@ -1,26 +1,33 @@
+// Mock the modules before importing
+jest.mock('@/app/lib/stripe.server', () => ({
+  stripe: {
+    paymentIntents: {
+      create: jest.fn(),
+      retrieve: jest.fn(),
+    },
+  },
+}))
+
+jest.mock('@/app/lib/db.server', () => ({
+  db: {
+    booking: {
+      findUnique: jest.fn(),
+      update: jest.fn(),
+    },
+  },
+}))
+
+jest.mock('@/app/lib/auth/session.server', () => ({
+  getUserSession: jest.fn(),
+}))
+
 import { POST } from '../route'
 import { NextRequest } from 'next/server'
 
-// Mock the modules that will be created during implementation
-const mockStripe = {
-  paymentIntents: {
-    create: jest.fn(),
-    retrieve: jest.fn(),
-  },
-}
-
-const mockDb = {
-  booking: {
-    findUnique: jest.fn(),
-    update: jest.fn(),
-  },
-}
-
-const mockGetUserSession = jest.fn()
-
-jest.mock('@/app/lib/stripe.server', () => ({ stripe: mockStripe }))
-jest.mock('@/app/lib/db.server', () => ({ db: mockDb }))
-jest.mock('@/app/lib/auth/session.server', () => ({ getUserSession: mockGetUserSession }))
+// Get mocked functions
+const mockStripe = require('@/app/lib/stripe.server').stripe
+const mockDb = require('@/app/lib/db.server').db
+const mockGetUserSession = require('@/app/lib/auth/session.server').getUserSession
 
 describe('POST /api/bookings/create-payment-intent', () => {
   beforeEach(() => {
@@ -44,7 +51,7 @@ describe('POST /api/bookings/create-payment-intent', () => {
       currency: 'usd',
     }
 
-    mockGetUserSession.mockResolvedValue({ userId: 'user-1' })
+    mockGetUserSession.mockResolvedValue({ user: { id: 'user-1' } })
     mockDb.booking.findUnique.mockResolvedValue(mockBooking)
     mockStripe.paymentIntents.create.mockResolvedValue(mockPaymentIntent)
     mockDb.booking.update.mockResolvedValue({
@@ -104,7 +111,7 @@ describe('POST /api/bookings/create-payment-intent', () => {
   })
 
   it('should return 400 if bookingId is missing', async () => {
-    mockGetUserSession.mockResolvedValue({ userId: 'user-1' })
+    mockGetUserSession.mockResolvedValue({ user: { id: 'user-1' } })
 
     const request = new NextRequest('http://localhost:3000/api/bookings/create-payment-intent', {
       method: 'POST',
@@ -122,7 +129,7 @@ describe('POST /api/bookings/create-payment-intent', () => {
   })
 
   it('should return 404 if booking does not exist', async () => {
-    mockGetUserSession.mockResolvedValue({ userId: 'user-1' })
+    mockGetUserSession.mockResolvedValue({ user: { id: 'user-1' } })
     mockDb.booking.findUnique.mockResolvedValue(null)
 
     const request = new NextRequest('http://localhost:3000/api/bookings/create-payment-intent', {
@@ -148,7 +155,7 @@ describe('POST /api/bookings/create-payment-intent', () => {
       status: 'PENDING',
     }
 
-    mockGetUserSession.mockResolvedValue({ userId: 'user-1' })
+    mockGetUserSession.mockResolvedValue({ user: { id: 'user-1' } })
     mockDb.booking.findUnique.mockResolvedValue(mockBooking)
 
     const request = new NextRequest('http://localhost:3000/api/bookings/create-payment-intent', {
@@ -183,7 +190,7 @@ describe('POST /api/bookings/create-payment-intent', () => {
       currency: 'usd',
     }
 
-    mockGetUserSession.mockResolvedValue({ userId: 'user-1' })
+    mockGetUserSession.mockResolvedValue({ user: { id: 'user-1' } })
     mockDb.booking.findUnique.mockResolvedValue(mockBooking)
     mockStripe.paymentIntents.retrieve.mockResolvedValue(mockPaymentIntent)
 
@@ -218,7 +225,7 @@ describe('POST /api/bookings/create-payment-intent', () => {
       stripePaymentIntentId: null,
     }
 
-    mockGetUserSession.mockResolvedValue({ userId: 'user-1' })
+    mockGetUserSession.mockResolvedValue({ user: { id: 'user-1' } })
     mockDb.booking.findUnique.mockResolvedValue(mockBooking)
     mockStripe.paymentIntents.create.mockRejectedValue(new Error('Stripe error'))
 
@@ -256,7 +263,7 @@ describe('POST /api/bookings/create-payment-intent', () => {
       currency: 'usd',
     }
 
-    mockGetUserSession.mockResolvedValue({ userId: 'user-1' })
+    mockGetUserSession.mockResolvedValue({ user: { id: 'user-1' } })
     mockDb.booking.findUnique.mockResolvedValue(mockBooking)
     mockStripe.paymentIntents.create.mockResolvedValue(mockPaymentIntent)
     mockDb.booking.update.mockResolvedValue({

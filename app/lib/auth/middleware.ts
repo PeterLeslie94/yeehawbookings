@@ -47,7 +47,7 @@ export function withAuth(
     }
 
     // Check token expiry
-    if (token.exp && Date.now() / 1000 > token.exp) {
+    if (token.exp && typeof token.exp === 'number' && Date.now() / 1000 > token.exp) {
       // API routes return 401
       if (pathname.startsWith('/api/')) {
         return NextResponse.json(
