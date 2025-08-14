@@ -32,6 +32,7 @@ interface SelectedPackage {
   packageId: number;
   quantity: number;
   price: number;
+  name?: string;
 }
 
 interface PackageSelectionProps {
@@ -92,7 +93,7 @@ const PackageModal: React.FC<PackageModalProps> = ({ package: pkg, price, isOpen
         <div className="mb-4">
           <h4 className="font-medium mb-2">Package Includes:</h4>
           <ul className="list-disc list-inside space-y-1">
-            {pkg.inclusions.map((item, index) => (
+            {pkg.inclusions && pkg.inclusions.map((item, index) => (
               <li key={index} className="text-gray-600">{item}</li>
             ))}
           </ul>
@@ -100,7 +101,7 @@ const PackageModal: React.FC<PackageModalProps> = ({ package: pkg, price, isOpen
         
         <div className="border-t pt-4">
           <p className="text-lg font-semibold">
-            ${price.toFixed(2)} per person
+            {price !== undefined ? `$${price.toFixed(2)} per person` : 'Price TBD'}
           </p>
           <p className="text-sm text-gray-500">
             Maximum {pkg.maxGuests} guests
@@ -262,7 +263,8 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
         selectedArray.push({
           packageId,
           quantity,
-          price: pricing.get(packageId) || pkg.defaultPrice
+          price: pricing.get(packageId) || pkg.defaultPrice,
+          name: pkg.name
         });
       }
     });
@@ -350,7 +352,13 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
         )}
         
         <div className="space-y-4 mb-6">
-          {packages.map(pkg => {
+          {packages.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 text-lg">No packages available for this date.</p>
+              <p className="text-gray-400 text-sm mt-2">Please contact us for availability.</p>
+            </div>
+          ) : (
+            packages.map(pkg => {
             const price = getPackagePrice(pkg);
             const quantity = selectedPackages.get(pkg.id) || 0;
             const available = isPackageAvailable(pkg.id);
@@ -371,7 +379,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
                     <p className="text-gray-600 text-sm">{pkg.description}</p>
                     
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {pkg.inclusions.slice(0, 3).map((inclusion, idx) => (
+                      {pkg.inclusions && pkg.inclusions.slice(0, 3).map((inclusion, idx) => (
                         <span 
                           key={idx}
                           className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded"
@@ -379,7 +387,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
                           {inclusion}
                         </span>
                       ))}
-                      {pkg.inclusions.length > 3 && (
+                      {pkg.inclusions && pkg.inclusions.length > 3 && (
                         <span className="text-xs text-gray-500">
                           +{pkg.inclusions.length - 3} more
                         </span>
@@ -389,7 +397,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
                   
                   <div className="text-right ml-4">
                     <p className="text-2xl font-bold text-green-600">
-                      ${price.toFixed(2)}
+                      {price !== undefined ? `$${price.toFixed(2)}` : 'Price TBD'}
                     </p>
                     <p className="text-sm text-gray-500">per person</p>
                   </div>
@@ -455,7 +463,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
                 </div>
               </article>
             );
-          })}
+          }))}
         </div>
         
         <div className="border-t pt-4 mb-6">
@@ -464,7 +472,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
               {totalGuests} / {maxGuests} guests selected
             </span>
             <span className="text-xl font-semibold">
-              Total: ${calculateTotal().toFixed(2)}
+              Total: ${calculateTotal() !== undefined ? calculateTotal().toFixed(2) : '0.00'}
             </span>
           </div>
         </div>

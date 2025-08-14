@@ -122,6 +122,10 @@ export interface CustomerFormData {
   promoCode: string | null;
   discount: number;
   finalAmount: number;
+  promoCodeData?: {
+    discountType: 'percentage' | 'fixed_amount';
+    discountValue: number;
+  };
 }
 
 export interface PromoCodeValidation {

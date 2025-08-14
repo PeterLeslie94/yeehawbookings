@@ -6,6 +6,7 @@ import PackageSelection from '@/app/components/booking/PackageSelection';
 import ExtraSelection from '@/app/components/booking/ExtraSelection';
 import { CustomerDetails } from '@/app/components/booking/CustomerDetails';
 import { PaymentStep } from '@/app/components/booking/PaymentStep';
+import ConfirmationStep from '@/app/components/booking/ConfirmationStep';
 import { SelectedDate, SelectedExtra, CustomerFormData } from '@/app/types/booking';
 
 type BookingStep = 'date' | 'packages' | 'extras' | 'details' | 'payment' | 'confirmation';
@@ -13,18 +14,23 @@ type BookingStep = 'date' | 'packages' | 'extras' | 'details' | 'payment' | 'con
 export default function BookingPage() {
   const [currentStep, setCurrentStep] = useState<BookingStep>('date');
   const [selectedDate, setSelectedDate] = useState<SelectedDate | null>(null);
-  const [selectedPackages, setSelectedPackages] = useState<{ packageId: number; quantity: number; price: number }[]>([]);
+  const [selectedPackages, setSelectedPackages] = useState<{ packageId: number; quantity: number; price: number; name?: string }[]>([]);
   const [selectedExtras, setSelectedExtras] = useState<SelectedExtra[]>([]);
   const [customerDetails, setCustomerDetails] = useState<CustomerFormData | null>(null);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+  
+  // Confirmation step state
+  const [confirmedBooking, setConfirmedBooking] = useState<any | null>(null);
+  const [confirmationLoading, setConfirmationLoading] = useState(false);
+  const [confirmationError, setConfirmationError] = useState<string | null>(null);
 
   const handleDateSelect = (date: SelectedDate) => {
     setSelectedDate(date);
     setCurrentStep('packages');
   };
 
-  const handlePackageSelect = (packages: { packageId: number; quantity: number; price: number }[]) => {
+  const handlePackageSelect = (packages: { packageId: number; quantity: number; price: number; name?: string }[]) => {
     setSelectedPackages(packages);
     setCurrentStep('extras');
   };
@@ -85,9 +91,36 @@ export default function BookingPage() {
     }
   };
 
-  const handlePaymentComplete = (data: { paymentIntentId: string }) => {
+  const handlePaymentComplete = async (data: { paymentIntentId: string }) => {
     setPaymentIntentId(data.paymentIntentId);
-    setCurrentStep('confirmation');
+    setConfirmationLoading(true);
+    setConfirmationError(null);
+    
+    try {
+      // Call confirmation API
+      const response = await fetch('/api/bookings/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingId: bookingId,
+          paymentIntentId: data.paymentIntentId
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to confirm booking');
+      }
+
+      const confirmationData = await response.json();
+      setConfirmedBooking(confirmationData);
+      setCurrentStep('confirmation');
+    } catch (error) {
+      console.error('Confirmation error:', error);
+      setConfirmationError(error instanceof Error ? error.message : 'Failed to confirm booking');
+    } finally {
+      setConfirmationLoading(false);
+    }
   };
 
   const renderStepIndicator = () => {
@@ -106,9 +139,7 @@ export default function BookingPage() {
           {steps.map((step, index) => (
             <div
               key={step.id}
-              className={`flex-1 text-center ${
-                step.disabled ? 'opacity-50' : ''
-              }`}
+              className="flex-1 text-center"
             >
               <div
                 className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center ${
@@ -178,30 +209,98 @@ export default function BookingPage() {
             originalAmount={customerDetails.promoCodeData ? calculateSubtotal() : undefined}
             discountAmount={customerDetails.promoCodeData ? 
               calculateSubtotal() - calculateTotalWithDiscount(customerDetails.promoCodeData) : undefined}
-            promoCode={customerDetails.promoCode}
+            promoCode={customerDetails.promoCode || undefined}
             onComplete={handlePaymentComplete}
             onBack={() => setCurrentStep('details')}
           />
         ) : null;
       
       case 'confirmation':
+        if (confirmationError) {
+          return (
+            <div className="text-center py-8">
+              <div className="bg-red-50 border border-red-200 rounded-md p-6">
+                <h2 className="text-xl font-semibold text-red-800 mb-2">Booking Confirmation Failed</h2>
+                <p className="text-red-700 mb-4">{confirmationError}</p>
+                <button
+                  onClick={() => {
+                    setConfirmationError(null);
+                    handlePaymentComplete({ paymentIntentId: paymentIntentId! });
+                  }}
+                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 mr-4"
+                >
+                  Try Again
+                </button>
+                <button
+                  onClick={() => window.location.href = '/'}
+                  className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                >
+                  Return to Home
+                </button>
+              </div>
+            </div>
+          );
+        }
+        
+        if (confirmedBooking && selectedDate && customerDetails) {
+          // Transform data for ConfirmationStep component
+          const bookingData = {
+            bookingReference: confirmedBooking.booking.bookingReference,
+            bookingDate: selectedDate.date,
+            totalAmount: calculateSubtotal(),
+            finalAmount: calculateTotalWithDiscount(customerDetails.promoCodeData),
+            discountAmount: customerDetails.promoCodeData ? 
+              calculateSubtotal() - calculateTotalWithDiscount(customerDetails.promoCodeData) : undefined,
+            customerDetails: customerDetails,
+            packages: selectedPackages.map(pkg => ({
+              id: pkg.packageId.toString(),
+              name: pkg.name || `Package ${pkg.packageId}`,
+              quantity: pkg.quantity,
+              price: pkg.price
+            })),
+            extras: selectedExtras.map(extra => ({
+              id: extra.id,
+              name: extra.name,
+              quantity: extra.quantity,
+              price: extra.price
+            })),
+            paymentConfirmation: {
+              paymentIntentId: confirmedBooking.paymentConfirmation.paymentIntentId,
+              status: confirmedBooking.paymentConfirmation.status,
+              amount: confirmedBooking.paymentConfirmation.amount / 100 // Convert from cents to dollars
+            }
+          };
+          
+          return (
+            <ConfirmationStep
+              bookingData={bookingData}
+              onPrint={() => window.print()}
+              onNewBooking={() => {
+                // Reset all state and go back to date selection
+                setCurrentStep('date');
+                setSelectedDate(null);
+                setSelectedPackages([]);
+                setSelectedExtras([]);
+                setCustomerDetails(null);
+                setBookingId(null);
+                setPaymentIntentId(null);
+                setConfirmedBooking(null);
+                setConfirmationError(null);
+              }}
+              isLoading={confirmationLoading}
+              error={confirmationError}
+            />
+          );
+        }
+        
+        // Loading state or no confirmed booking data
         return (
           <div className="text-center py-8">
             <div className="mb-4">
-              <svg className="w-16 h-16 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
             </div>
-            <h2 className="text-2xl font-bold mb-2">Payment Successful!</h2>
-            <p className="text-gray-600 mb-4">Your booking has been confirmed.</p>
-            <p className="text-sm text-gray-500">Booking ID: {bookingId}</p>
-            <p className="text-sm text-gray-500 mb-6">Payment ID: {paymentIntentId}</p>
-            <button
-              onClick={() => window.location.href = '/'}
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-            >
-              Return to Home
-            </button>
+            <h2 className="text-2xl font-bold mb-2">Confirming Your Booking...</h2>
+            <p className="text-gray-600">Please wait while we process your booking confirmation.</p>
           </div>
         );
       
