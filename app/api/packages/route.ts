@@ -37,10 +37,11 @@ export async function GET(request: NextRequest) {
         name: true,
         description: true,
         maxGuests: true,
+        defaultPrice: true,
+        inclusions: true,
         isActive: true,
         createdAt: true,
-        updatedAt: true,
-        ...(includeDefaultPricing ? { defaultPrice: true } : {})
+        updatedAt: true
       }
     });
 
