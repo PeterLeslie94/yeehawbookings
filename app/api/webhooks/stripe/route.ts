@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/app/lib/stripe.server'
-import { db } from '@/app/lib/db.server'
+import { prisma } from '@/app/lib/prisma'
 import { BookingStatus } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
@@ -40,9 +40,31 @@ export async function POST(request: NextRequest) {
         const paymentIntent = event.data.object
         const bookingId = paymentIntent.metadata?.bookingId
 
-        if (bookingId) {
-          await db.booking.update({
-            where: { id: bookingId },
+        if (!bookingId) {
+          return NextResponse.json(
+            { error: 'Missing booking ID in payment intent metadata' },
+            { status: 400 }
+          )
+        }
+
+        // Find booking by payment intent ID for security
+        const booking = await prisma.booking.findFirst({
+          where: {
+            stripePaymentIntentId: paymentIntent.id
+          }
+        })
+
+        if (!booking) {
+          return NextResponse.json(
+            { error: 'Booking not found' },
+            { status: 404 }
+          )
+        }
+
+        // Only update if not already confirmed
+        if (booking.status !== BookingStatus.CONFIRMED) {
+          await prisma.booking.update({
+            where: { id: booking.id },
             data: {
               status: BookingStatus.CONFIRMED,
               stripePaymentStatus: 'succeeded',
@@ -59,7 +81,7 @@ export async function POST(request: NextRequest) {
         const errorMessage = paymentIntent.last_payment_error?.message
 
         if (bookingId) {
-          await db.booking.update({
+          await prisma.booking.update({
             where: { id: bookingId },
             data: {
               stripePaymentStatus: 'failed',
@@ -75,7 +97,7 @@ export async function POST(request: NextRequest) {
         const bookingId = paymentIntent.metadata?.bookingId
 
         if (bookingId) {
-          await db.booking.update({
+          await prisma.booking.update({
             where: { id: bookingId },
             data: {
               status: BookingStatus.CANCELLED,
@@ -91,7 +113,7 @@ export async function POST(request: NextRequest) {
         const bookingId = paymentIntent.metadata?.bookingId
 
         if (bookingId) {
-          await db.booking.update({
+          await prisma.booking.update({
             where: { id: bookingId },
             data: {
               stripePaymentStatus: 'requires_action',
@@ -109,14 +131,14 @@ export async function POST(request: NextRequest) {
         if (bookingId || paymentIntentId) {
           // Find booking by ID or payment intent
           const booking = bookingId
-            ? await db.booking.findUnique({ where: { id: bookingId } })
-            : await db.booking.findFirst({
+            ? await prisma.booking.findUnique({ where: { id: bookingId } })
+            : await prisma.booking.findFirst({
                 where: { stripePaymentIntentId: paymentIntentId },
               })
 
           if (booking) {
             const isFullRefund = charge.amount_refunded === charge.amount
-            await db.booking.update({
+            await prisma.booking.update({
               where: { id: booking.id },
               data: {
                 status: isFullRefund ? BookingStatus.REFUNDED : booking.status,

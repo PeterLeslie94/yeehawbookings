@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         maxGuests: pkg.maxGuests,
         price,
         isCustomPrice,
-        ...(!customPricing && !pkg.defaultPrice && { message: 'No pricing available' })
+        ...(!customPricing && !pkg.defaultPrice ? { message: 'No pricing available' } : {})
       };
     });
 

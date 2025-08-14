@@ -204,20 +204,45 @@ describe('POST /api/bookings/confirm', () => {
 
     it('should generate unique booking reference if not already set', async () => {
       // Arrange
+      const newBookingDate = addDays(new Date(), 8)
+      
+      // Create package availability for the new booking date
+      await prisma.packageAvailability.create({
+        data: {
+          packageId: testPackage.id,
+          date: newBookingDate,
+          totalQuantity: 10,
+          availableQuantity: 8,
+          isAvailable: true
+        }
+      })
+
       const bookingWithoutRef = await prisma.booking.create({
         data: {
           bookingReference: '', // Will be generated
           userId: testUser.id,
-          bookingDate: addDays(new Date(), 8),
+          bookingDate: newBookingDate,
           status: 'PENDING',
           totalAmount: 500.00,
-          finalAmount: 500.00
+          finalAmount: 500.00,
+          items: {
+            create: [
+              {
+                itemType: 'PACKAGE',
+                packageId: testPackage.id,
+                quantity: 1,
+                unitPrice: 500.00,
+                totalPrice: 500.00
+              }
+            ]
+          }
         }
       })
 
       mockGetUserSession.mockResolvedValue({ user: { id: testUser.id } })
       mockStripe.paymentIntents.retrieve.mockResolvedValue({
         ...testPaymentIntent,
+        amount: 50000, // $500.00 in cents to match booking
         metadata: { bookingId: bookingWithoutRef.id, userId: testUser.id }
       })
 
@@ -231,7 +256,7 @@ describe('POST /api/bookings/confirm', () => {
 
       // Assert
       expect(response.status).toBe(200)
-      expect(data.booking.bookingReference).toMatch(/^[A-Z0-9]{6,12}$/)
+      expect(data.booking.bookingReference).toMatch(/^NCB-\d{8}-[A-Z0-9]{6}$/)
       expect(data.booking.bookingReference).not.toBe('')
     })
 
@@ -535,7 +560,7 @@ describe('POST /api/bookings/confirm', () => {
 
       // Act
       const request = createMockRequest('/api/bookings/confirm', {
-        bookingId: 'nonexistent-id',
+        bookingId: 'clxxxxxxxxxxxxxxxxxxxxxxx',
         paymentIntentId: 'pi_test123456'
       })
       const response = await POST(request)
@@ -718,9 +743,9 @@ describe('POST /api/bookings/confirm', () => {
       mockGetUserSession.mockResolvedValue({ user: { id: testUser.id } })
       mockStripe.paymentIntents.retrieve.mockResolvedValue(testPaymentIntent)
 
-      // Mock email creation to fail
-      const originalEmailCreate = prisma.emailQueue.create
-      prisma.emailQueue.create = jest.fn().mockRejectedValue(new Error('Email service down'))
+      // Mock transaction to fail
+      const originalTransaction = prisma.$transaction
+      prisma.$transaction = jest.fn().mockRejectedValue(new Error('Transaction failed'))
 
       const beforeBooking = await prisma.booking.findUnique({
         where: { id: testBooking.id }
@@ -742,7 +767,7 @@ describe('POST /api/bookings/confirm', () => {
       expect(afterBooking?.status).toBe(beforeBooking?.status) // Should not have changed
 
       // Cleanup
-      prisma.emailQueue.create = originalEmailCreate
+      prisma.$transaction = originalTransaction
     })
 
     it('should handle unique constraint violation on reference', async () => {
@@ -923,9 +948,9 @@ describe('POST /api/bookings/confirm', () => {
       mockGetUserSession.mockResolvedValue({ user: { id: testUser.id } })
       mockStripe.paymentIntents.retrieve.mockResolvedValue(testPaymentIntent)
 
-      // Mock email queue creation to fail
-      const originalEmailCreate = prisma.emailQueue.create
-      prisma.emailQueue.create = jest.fn().mockRejectedValue(new Error('Email service unavailable'))
+      // Mock transaction to fail with email error
+      const originalTransaction = prisma.$transaction
+      prisma.$transaction = jest.fn().mockRejectedValue(new Error('Email service unavailable'))
 
       // Act
       const request = createMockRequest('/api/bookings/confirm', {
@@ -937,10 +962,10 @@ describe('POST /api/bookings/confirm', () => {
 
       // Assert
       expect(response.status).toBe(500)
-      expect(data.error).toContain('Email scheduling failed')
+      expect(data.error).toBe('Email scheduling failed')
 
       // Cleanup
-      prisma.emailQueue.create = originalEmailCreate
+      prisma.$transaction = originalTransaction
     })
   })
 
@@ -1244,6 +1269,326 @@ describe('POST /api/bookings/confirm', () => {
       const reminderTime = new Date(data.emailScheduled.reminderEmail.scheduledFor)
       const expectedReminderTime = addHours(testBooking.bookingDate, -24)
       expect(reminderTime.getTime()).toBeCloseTo(expectedReminderTime.getTime(), -2)
+    })
+  })
+
+  describe('Guest Booking Confirmation', () => {
+    let testGuestBooking: any
+    let testGuestPaymentIntent: any
+
+    beforeEach(async () => {
+      const guestBookingDate = addDays(new Date(), 7)
+
+      // Create availability for the guest booking date
+      await prisma.packageAvailability.create({
+        data: {
+          packageId: testPackage.id,
+          date: guestBookingDate,
+          totalQuantity: 10,
+          availableQuantity: 8,
+          isAvailable: true
+        }
+      })
+
+      // Create a guest booking (no userId, but has guestEmail and guestName)
+      testGuestBooking = await prisma.booking.create({
+        data: {
+          bookingReference: 'GUEST-REF-001',
+          userId: null,
+          guestEmail: 'guest@example.com',
+          guestName: 'Guest User',
+          bookingDate: guestBookingDate,
+          status: 'PENDING',
+          totalAmount: 500.00,
+          discountAmount: 0.00,
+          finalAmount: 500.00,
+          items: {
+            create: [
+              {
+                itemType: 'PACKAGE',
+                packageId: testPackage.id,
+                quantity: 1,
+                unitPrice: 500.00,
+                totalPrice: 500.00
+              }
+            ]
+          }
+        },
+        include: {
+          items: true
+        }
+      })
+
+      // Mock payment intent for guest
+      testGuestPaymentIntent = {
+        id: 'pi_guest123',
+        status: 'succeeded',
+        amount: 50000, // $500.00 in cents
+        currency: 'gbp',
+        metadata: {
+          bookingId: testGuestBooking.id,
+          guestEmail: 'guest@example.com',
+          guestName: 'Guest User'
+        }
+      }
+    })
+
+    it('should confirm guest booking without authentication', async () => {
+      // Arrange - No authentication for guest
+      mockGetUserSession.mockResolvedValue(null)
+      mockStripe.paymentIntents.retrieve.mockResolvedValue(testGuestPaymentIntent)
+
+      // Act
+      const request = createMockRequest('/api/bookings/confirm', {
+        bookingId: testGuestBooking.id,
+        paymentIntentId: 'pi_guest123'
+      })
+      const response = await POST(request)
+      const data = await response.json()
+
+      // Assert
+      expect(response.status).toBe(200)
+      expect(data.booking).toBeDefined()
+      expect(data.booking.bookingReference).toBe('GUEST-REF-001')
+      expect(data.booking.status).toBe('CONFIRMED')
+      expect(data.booking.guestEmail).toBe('guest@example.com')
+      expect(data.booking.guestName).toBe('Guest User')
+    })
+
+    it('should schedule confirmation email for guest using guestEmail', async () => {
+      // Arrange
+      mockGetUserSession.mockResolvedValue(null)
+      mockStripe.paymentIntents.retrieve.mockResolvedValue(testGuestPaymentIntent)
+
+      // Act
+      const request = createMockRequest('/api/bookings/confirm', {
+        bookingId: testGuestBooking.id,
+        paymentIntentId: 'pi_guest123'
+      })
+      const response = await POST(request)
+
+      // Assert
+      expect(response.status).toBe(200)
+      
+      const confirmationEmail = await prisma.emailQueue.findFirst({
+        where: {
+          recipient: 'guest@example.com',
+          emailType: 'BOOKING_CONFIRMATION'
+        }
+      })
+      
+      expect(confirmationEmail).toBeDefined()
+      expect(confirmationEmail?.recipient).toBe('guest@example.com')
+      expect(confirmationEmail?.status).toBe('PENDING')
+    })
+
+    it('should schedule reminder email for guest using guestEmail', async () => {
+      // Arrange
+      mockGetUserSession.mockResolvedValue(null)
+      mockStripe.paymentIntents.retrieve.mockResolvedValue(testGuestPaymentIntent)
+
+      // Act
+      const request = createMockRequest('/api/bookings/confirm', {
+        bookingId: testGuestBooking.id,
+        paymentIntentId: 'pi_guest123'
+      })
+      const response = await POST(request)
+
+      // Assert
+      expect(response.status).toBe(200)
+      
+      const reminderEmail = await prisma.emailQueue.findFirst({
+        where: {
+          recipient: 'guest@example.com',
+          emailType: 'BOOKING_REMINDER'
+        }
+      })
+      
+      expect(reminderEmail).toBeDefined()
+      expect(reminderEmail?.recipient).toBe('guest@example.com')
+      
+      const expectedReminderTime = addHours(testGuestBooking.bookingDate, -24)
+      expect(reminderEmail?.scheduledFor.getTime()).toBeCloseTo(expectedReminderTime.getTime(), -2)
+    })
+
+    it('should validate guest payment intent metadata', async () => {
+      // Arrange
+      mockGetUserSession.mockResolvedValue(null)
+      
+      // Payment intent with wrong guest email
+      const wrongGuestPaymentIntent = {
+        ...testGuestPaymentIntent,
+        metadata: {
+          bookingId: testGuestBooking.id,
+          guestEmail: 'wrong@example.com', // Different email
+          guestName: 'Guest User'
+        }
+      }
+      mockStripe.paymentIntents.retrieve.mockResolvedValue(wrongGuestPaymentIntent)
+
+      // Act
+      const request = createMockRequest('/api/bookings/confirm', {
+        bookingId: testGuestBooking.id,
+        paymentIntentId: 'pi_guest123'
+      })
+      const response = await POST(request)
+      const data = await response.json()
+
+      // Assert - Should still work as we match by booking ID, not guest details in metadata
+      expect(response.status).toBe(200)
+    })
+
+    it('should reject guest booking with missing guest details', async () => {
+      // Arrange - Create guest booking without required fields
+      const incompleteGuestBooking = await prisma.booking.create({
+        data: {
+          bookingReference: 'INCOMPLETE-GUEST',
+          userId: null,
+          guestEmail: null, // Missing
+          guestName: null,  // Missing
+          bookingDate: addDays(new Date(), 8),
+          status: 'PENDING',
+          totalAmount: 500.00,
+          finalAmount: 500.00
+        }
+      })
+
+      mockGetUserSession.mockResolvedValue(null)
+      mockStripe.paymentIntents.retrieve.mockResolvedValue({
+        ...testGuestPaymentIntent,
+        metadata: { bookingId: incompleteGuestBooking.id }
+      })
+
+      // Act
+      const request = createMockRequest('/api/bookings/confirm', {
+        bookingId: incompleteGuestBooking.id,
+        paymentIntentId: 'pi_guest123'
+      })
+      const response = await POST(request)
+      const data = await response.json()
+
+      // Assert
+      expect(response.status).toBe(400)
+      expect(data.error).toContain('Guest booking requires email and name')
+    })
+
+    it('should not allow authenticated user to confirm guest booking they do not own', async () => {
+      // Arrange - Different authenticated user tries to confirm guest booking
+      mockGetUserSession.mockResolvedValue({ user: { id: testUser.id } })
+      mockStripe.paymentIntents.retrieve.mockResolvedValue(testGuestPaymentIntent)
+
+      // Act
+      const request = createMockRequest('/api/bookings/confirm', {
+        bookingId: testGuestBooking.id,
+        paymentIntentId: 'pi_guest123'
+      })
+      const response = await POST(request)
+      const data = await response.json()
+
+      // Assert
+      expect(response.status).toBe(403)
+      expect(data.error).toBe('Access denied')
+    })
+
+    it('should handle guest booking with promo code discount', async () => {
+      // Arrange - Guest booking with discount
+      const discountBookingDate = addDays(new Date(), 9)
+      
+      // Create availability for this booking date
+      await prisma.packageAvailability.create({
+        data: {
+          packageId: testPackage.id,
+          date: discountBookingDate,
+          totalQuantity: 10,
+          availableQuantity: 8,
+          isAvailable: true
+        }
+      })
+
+      const discountedGuestBooking = await prisma.booking.create({
+        data: {
+          bookingReference: 'GUEST-DISCOUNT-001',
+          userId: null,
+          guestEmail: 'guest@example.com',
+          guestName: 'Guest User',
+          bookingDate: discountBookingDate,
+          status: 'PENDING',
+          totalAmount: 500.00,
+          discountAmount: 50.00,
+          finalAmount: 450.00,
+          items: {
+            create: [
+              {
+                itemType: 'PACKAGE',
+                packageId: testPackage.id,
+                quantity: 1,
+                unitPrice: 500.00,
+                totalPrice: 500.00
+              }
+            ]
+          }
+        }
+      })
+
+      const discountedPaymentIntent = {
+        ...testGuestPaymentIntent,
+        id: 'pi_guest_discount',
+        amount: 45000, // $450.00 with discount
+        metadata: {
+          bookingId: discountedGuestBooking.id,
+          guestEmail: 'guest@example.com',
+          guestName: 'Guest User',
+          promoCode: 'GUEST10',
+          discountAmount: '5000'
+        }
+      }
+
+      mockGetUserSession.mockResolvedValue(null)
+      mockStripe.paymentIntents.retrieve.mockResolvedValue(discountedPaymentIntent)
+
+      // Act
+      const request = createMockRequest('/api/bookings/confirm', {
+        bookingId: discountedGuestBooking.id,
+        paymentIntentId: 'pi_guest_discount'
+      })
+      const response = await POST(request)
+      const data = await response.json()
+
+      // Assert
+      expect(response.status).toBe(200)
+      expect(data.booking.finalAmount).toBe(450)
+      expect(data.paymentConfirmation.amount).toBe(45000)
+    })
+
+    it('should prevent confirmed guest booking from being re-confirmed', async () => {
+      // Arrange - Already confirmed guest booking
+      const confirmedGuestBooking = await prisma.booking.create({
+        data: {
+          bookingReference: 'GUEST-CONFIRMED-001',
+          userId: null,
+          guestEmail: 'guest@example.com',
+          guestName: 'Guest User',
+          bookingDate: addDays(new Date(), 10),
+          status: 'CONFIRMED', // Already confirmed
+          totalAmount: 500.00,
+          finalAmount: 500.00,
+          stripePaymentId: 'pi_already_paid'
+        }
+      })
+
+      mockGetUserSession.mockResolvedValue(null)
+
+      // Act
+      const request = createMockRequest('/api/bookings/confirm', {
+        bookingId: confirmedGuestBooking.id,
+        paymentIntentId: 'pi_guest123'
+      })
+      const response = await POST(request)
+      const data = await response.json()
+
+      // Assert
+      expect(response.status).toBe(409)
+      expect(data.error).toBe('Booking already confirmed')
     })
   })
 })

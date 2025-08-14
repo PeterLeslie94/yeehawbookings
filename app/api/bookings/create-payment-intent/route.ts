@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/app/lib/stripe.server'
-import { db } from '@/app/lib/db.server'
+import { prisma } from '@/app/lib/prisma'
 import { getUserSession } from '@/app/lib/auth/session.server'
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication
+    // Get user session (optional for guest checkout)
     const session = await getUserSession()
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     // Get request body
     const body = await request.json()
@@ -20,12 +17,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch booking
-    const booking = await db.booking.findUnique({
+    const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
         user: true,
-        packages: true,
-        extras: true,
+        promoCode: true,
+        items: {
+          include: {
+            package: true,
+            extra: true,
+          }
+        },
       },
     })
 
@@ -33,9 +35,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
-    // Check ownership
-    if (booking.userId !== session.user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    // Validate booking access
+    if (booking.userId) {
+      // For authenticated bookings, check ownership
+      if (!session?.user?.id || booking.userId !== session.user.id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    } else {
+      // For guest bookings, validate required fields
+      if (!booking.guestEmail || !booking.guestName) {
+        return NextResponse.json({ 
+          error: 'Guest booking requires email and name' 
+        }, { status: 400 })
+      }
     }
 
     // If payment intent already exists, retrieve it
@@ -49,17 +61,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate final amount with discount applied
-    const amount = booking.discountAmount ? booking.totalAmount - booking.discountAmount : booking.totalAmount
-    const currency = booking.currency || 'usd'
+    const amount = booking.finalAmount
+    const currency = booking.currency || 'gbp'
 
     // Create payment intent metadata
     const metadata: Record<string, string> = {
       bookingId: booking.id,
-      userId: booking.userId,
+    }
+
+    // Add user information to metadata
+    if (booking.userId) {
+      metadata.userId = booking.userId
+    } else {
+      // Guest booking metadata
+      metadata.guestEmail = booking.guestEmail!
+      metadata.guestName = booking.guestName!
     }
 
     if (booking.promoCode) {
-      metadata.promoCode = booking.promoCode
+      metadata.promoCode = booking.promoCode.code
       metadata.discountAmount = String(booking.discountAmount || 0)
     }
 
@@ -71,7 +91,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Update booking with payment intent ID
-    await db.booking.update({
+    await prisma.booking.update({
       where: { id: bookingId },
       data: { stripePaymentIntentId: paymentIntent.id },
     })

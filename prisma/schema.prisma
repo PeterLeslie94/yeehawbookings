@@ -64,21 +64,28 @@ model VerificationToken {
 
 // Business models
 model Booking {
-  id                String         @id @default(cuid())
-  bookingReference  String         @unique
-  userId            String?
-  guestEmail        String?
-  guestName         String?
-  bookingDate       DateTime
-  status            BookingStatus  @default(CONFIRMED)
-  totalAmount       Float
-  discountAmount    Float          @default(0)
-  finalAmount       Float
-  customerNotes     String?
-  promoCodeId       String?
-  stripePaymentId   String?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id                    String         @id @default(cuid())
+  bookingReference      String         @unique
+  userId                String?
+  guestEmail            String?
+  guestName             String?
+  bookingDate           DateTime
+  status                BookingStatus  @default(PENDING)
+  totalAmount           Float
+  discountAmount        Float          @default(0)
+  finalAmount           Float
+  currency              String         @default("gbp")
+  customerNotes         String?
+  promoCodeId           String?
+  stripePaymentId       String?
+  stripePaymentIntentId String?
+  stripePaymentStatus   String?
+  paidAt                DateTime?
+  paymentError          String?
+  refundedAt            DateTime?
+  refundAmount          Float?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 
   user       User?          @relation(fields: [userId], references: [id])
   promoCode  PromoCode?     @relation(fields: [promoCodeId], references: [id])

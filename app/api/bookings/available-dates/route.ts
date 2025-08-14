@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Build available dates array
-    const availableDates: AvailableDate[] = weekendDates
+    const availableDates = weekendDates
       .map(date => {
         const dateStr = format(date, 'yyyy-MM-dd');
         const dayOfWeek = date.getDay(); // 0 = Sunday, 5 = Friday, 6 = Saturday
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
           blackoutReason: isBlackedOut ? blackoutMap.get(dateStr) : undefined,
           timezone: UK_TIMEZONE,
           formattedDate: formatDateForDisplay(date),
-        };
+        } as AvailableDate;
       })
       .filter((date): date is AvailableDate => date !== null);
 

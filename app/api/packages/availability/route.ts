@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
         maxGuests: pkg.maxGuests,
         isAvailable: availabilityData?.isAvailable ?? false,
         availableQuantity: availabilityData?.availableQuantity ?? 0,
-        ...((!availabilityData) && { message: 'No availability data' })
+        ...(!availabilityData ? { message: 'No availability data' } : {})
       };
     });
 

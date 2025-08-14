@@ -66,11 +66,11 @@ describe('/api/admin/bookings', () => {
           bookingReference: 'REF001',
           guestName: 'John Doe',
           guestEmail: 'john@example.com',
-          bookingDate: new Date('2024-08-15'),
+          bookingDate: '2024-08-15T00:00:00.000Z',
           status: 'CONFIRMED',
           finalAmount: 150.00,
           currency: 'gbp',
-          createdAt: new Date('2024-08-10'),
+          createdAt: '2024-08-10T00:00:00.000Z',
           items: [{
             id: 'item1',
             quantity: 2,
@@ -102,6 +102,7 @@ describe('/api/admin/bookings', () => {
       });
 
       expect(mockPrisma.booking.findMany).toHaveBeenCalledWith({
+        where: {},
         include: {
           items: {
             include: {
@@ -145,6 +146,7 @@ describe('/api/admin/bookings', () => {
       });
 
       expect(mockPrisma.booking.findMany).toHaveBeenCalledWith({
+        where: {},
         include: expect.any(Object),
         orderBy: { createdAt: 'desc' },
         skip: 20, // (page - 1) * limit = (3-1) * 10
@@ -281,6 +283,7 @@ describe('/api/admin/bookings', () => {
 
       expect(response.status).toBe(200);
       expect(mockPrisma.booking.findMany).toHaveBeenCalledWith({
+        where: {},
         include: expect.any(Object),
         orderBy: { bookingDate: 'asc' },
         skip: 0,
