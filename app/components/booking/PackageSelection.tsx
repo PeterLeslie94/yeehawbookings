@@ -458,10 +458,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
         </div>
         
         <div className="border-t pt-4 mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-gray-600">
-              {totalGuests} guests selected
-            </span>
+          <div className="flex justify-end items-center mb-2">
             <span className="text-xl font-semibold">
               Total: £{calculateTotal() !== undefined ? calculateTotal().toFixed(2) : '0.00'}
             </span>
