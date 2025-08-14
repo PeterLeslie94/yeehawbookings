@@ -100,7 +100,7 @@ const PackageModal: React.FC<PackageModalProps> = ({ package: pkg, price, isOpen
         
         <div className="border-t pt-4">
           <p className="text-lg font-semibold">
-            {price !== undefined ? `£${price.toFixed(2)} per person` : 'Price TBD'}
+            {price !== undefined ? (price === 0 ? 'FREE' : `£${price.toFixed(2)}`) : 'Price TBD'}
           </p>
           <p className="text-sm text-gray-500">
             Maximum {pkg.maxGuests} guests
@@ -388,9 +388,8 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
                   
                   <div className="text-right ml-4">
                     <p className="text-2xl font-bold text-green-600">
-                      {price !== undefined ? `£${price.toFixed(2)}` : 'Price TBD'}
+                      {price !== undefined ? (price === 0 ? 'FREE' : `£${price.toFixed(2)}`) : 'Price TBD'}
                     </p>
-                    <p className="text-sm text-gray-500">per person</p>
                   </div>
                 </div>
                 
@@ -428,27 +427,23 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
                   </div>
                   
                   <div className="flex items-center gap-3">
-                    {spotsText && (
-                      <span 
-                        className={`text-sm ${
-                          !available ? 'text-red-600 font-semibold' :
-                          isLimited ? 'text-orange-600' : 
-                          'text-gray-600'
-                        }`}
-                        aria-live="polite"
-                      >
-                        {isLimited && <span className="font-semibold">Limited availability: </span>}
-                        {spotsText}
-                      </span>
-                    )}
+                    
+                    <button
+                      onClick={() => handleQuantityChange(pkg.id, 1)}
+                      disabled={!available}
+                      className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm flex items-center gap-1"
+                      aria-label={`Add ${pkg.name} to basket`}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add to Basket
+                    </button>
                     
                     <button
                       onClick={() => setSelectedModal(pkg.id)}
-                      className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1"
+                      className="text-gray-500 hover:text-gray-700 text-sm"
                       aria-label={`View details for ${pkg.name}`}
                     >
                       <Info className="w-4 h-4" />
-                      View Details
                     </button>
                   </div>
                 </div>
