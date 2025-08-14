@@ -3,20 +3,14 @@ import { prisma } from '@/app/lib/prisma'
 import { stripe } from '@/app/lib/stripe.server'
 import { getUserSession } from '@/app/lib/auth/session.server'
 import { generateBookingReference } from '@/app/lib/booking/reference'
+import { logBookingConfirmation, logBookingReminder } from '@/app/lib/email/service'
 import { addHours } from 'date-fns'
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
+    // Get user session (optional for guest checkout)
     const session = await getUserSession()
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const userId = session.user.id
+    const userId = session?.user?.id || null
 
     // Parse request body
     let body
@@ -80,12 +74,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if booking belongs to authenticated user
-    if (booking.userId !== userId) {
-      return NextResponse.json(
-        { error: 'Access denied' },
-        { status: 403 }
-      )
+    // Validate booking access
+    if (booking.userId) {
+      // For authenticated bookings, check ownership
+      if (!userId || booking.userId !== userId) {
+        return NextResponse.json(
+          { error: 'Access denied' },
+          { status: 403 }
+        )
+      }
+    } else {
+      // For guest bookings, validate required fields
+      if (!booking.guestEmail || !booking.guestName) {
+        return NextResponse.json(
+          { error: 'Guest booking requires email and name' },
+          { status: 400 }
+        )
+      }
+      
+      // Guest bookings should not be accessed by authenticated users
+      if (userId) {
+        return NextResponse.json(
+          { error: 'Access denied' },
+          { status: 403 }
+        )
+      }
     }
 
     // Check if booking is in valid state for confirmation
@@ -212,10 +225,13 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Determine recipient email (user email or guest email)
+      const recipientEmail = booking.userId ? booking.user!.email : booking.guestEmail!
+
       // Create confirmation email queue entry
       const confirmationEmail = await tx.emailQueue.create({
         data: {
-          recipient: booking.user!.email,
+          recipient: recipientEmail,
           subject: 'Booking Confirmation - Country Days',
           emailType: 'BOOKING_CONFIRMATION',
           content: {
@@ -239,7 +255,7 @@ export async function POST(request: NextRequest) {
       const reminderTime = addHours(booking.bookingDate, -24)
       const reminderEmail = await tx.emailQueue.create({
         data: {
-          recipient: booking.user!.email,
+          recipient: recipientEmail,
           subject: 'Booking Reminder - Country Days',
           emailType: 'BOOKING_REMINDER',
           content: {
@@ -265,6 +281,31 @@ export async function POST(request: NextRequest) {
         reminderEmail
       }
     })
+
+    // Log emails to console (as per Phase 2.6 requirements)
+    try {
+      // Log confirmation email immediately
+      await logBookingConfirmation(
+        result.booking.userId ? result.booking.user!.email : result.booking.guestEmail!,
+        result.booking.bookingReference,
+        result.booking.bookingDate,
+        result.booking.finalAmount,
+        result.booking.items
+      )
+
+      // Log reminder email (scheduled for later)
+      await logBookingReminder(
+        result.booking.userId ? result.booking.user!.email : result.booking.guestEmail!,
+        result.booking.bookingReference,
+        result.booking.bookingDate,
+        result.booking.finalAmount,
+        result.booking.items,
+        result.reminderEmail.scheduledFor
+      )
+    } catch (emailError) {
+      // Don't fail the booking if email logging fails, just log the error
+      console.error('Email logging error (booking confirmed successfully):', emailError)
+    }
 
     // Return successful response
     return NextResponse.json({

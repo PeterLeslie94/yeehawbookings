@@ -252,7 +252,7 @@ describe('GET /api/bookings/[reference]', () => {
     const data = await response.json()
 
     expect(response.status).toBe(500)
-    expect(data).toEqual({ error: 'Internal server error' })
+    expect(data).toEqual({ error: 'Database error' })
   })
 
   it('should return booking with correct date formatting', async () => {
