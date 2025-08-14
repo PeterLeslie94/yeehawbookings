@@ -185,20 +185,20 @@ This document outlines the development plan for implementing a comprehensive nig
 **Goal**: Confirm booking and send notifications
 
 #### Tasks:
-- [ ] Generate unique booking reference
-- [ ] Create confirmation page
-- [ ] Send confirmation email
-- [ ] Schedule reminder email (24hrs before)
-- [ ] Store booking in database
+- [x] Generate unique booking reference
+- [x] Create confirmation page
+- [x] Send confirmation email (console logging)
+- [x] Schedule reminder email (24hrs before)
+- [x] Store booking in database
 
 #### API Routes:
 - `POST /api/bookings/confirm`
 - `GET /api/bookings/:reference`
 
 #### Tests to Write:
-- Booking creation tests
-- Reference generation tests
-- Email sending tests
+- [x] Booking creation tests
+- [x] Reference generation tests  
+- [x] Email sending tests
 
 ## Phase 3: Admin Panel - Core Features (Week 3-4)
 
