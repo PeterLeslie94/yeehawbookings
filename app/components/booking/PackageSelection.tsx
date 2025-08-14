@@ -24,7 +24,7 @@ interface PackagePricing {
 interface PackageAvailability {
   packageId: number;
   date: string;
-  spotsAvailable: number;
+  availableQuantity: number;
   totalSpots: number;
 }
 
@@ -101,7 +101,7 @@ const PackageModal: React.FC<PackageModalProps> = ({ package: pkg, price, isOpen
         
         <div className="border-t pt-4">
           <p className="text-lg font-semibold">
-            {price !== undefined ? `$${price.toFixed(2)} per person` : 'Price TBD'}
+            {price !== undefined ? `£${price.toFixed(2)} per person` : 'Price TBD'}
           </p>
           <p className="text-sm text-gray-500">
             Maximum {pkg.maxGuests} guests
@@ -221,7 +221,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
     
     // Check availability
     const pkgAvailability = availability.get(packageId);
-    const maxAvailable = pkgAvailability ? pkgAvailability.spotsAvailable : Infinity;
+    const maxAvailable = pkgAvailability ? pkgAvailability.availableQuantity : Infinity;
     
     // Check max guests
     const otherGuests = totalGuests - currentQuantity;
@@ -280,7 +280,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
   // Check if package is available
   const isPackageAvailable = (packageId: number) => {
     const pkgAvailability = availability.get(packageId);
-    return !pkgAvailability || pkgAvailability.spotsAvailable > 0;
+    return !pkgAvailability || pkgAvailability.availableQuantity > 0;
   };
 
   // Get spots available text
@@ -288,11 +288,11 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
     const pkgAvailability = availability.get(packageId);
     if (!pkgAvailability) return null;
     
-    if (pkgAvailability.spotsAvailable === 0) {
+    if (pkgAvailability.availableQuantity === 0) {
       return 'Sold out';
     }
     
-    return `${pkgAvailability.spotsAvailable} spots available`;
+    return `${pkgAvailability.availableQuantity} spots available`;
   };
 
   // Check if should show limited availability
@@ -300,8 +300,8 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
     const pkgAvailability = availability.get(packageId);
     if (!pkgAvailability) return false;
     
-    const percentAvailable = pkgAvailability.spotsAvailable / pkgAvailability.totalSpots;
-    return percentAvailable < 0.2 && pkgAvailability.spotsAvailable > 0;
+    const percentAvailable = pkgAvailability.availableQuantity / pkgAvailability.totalSpots;
+    return percentAvailable < 0.2 && pkgAvailability.availableQuantity > 0;
   };
 
   if (!selectedDate || maxGuests === undefined) {
@@ -397,7 +397,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
                   
                   <div className="text-right ml-4">
                     <p className="text-2xl font-bold text-green-600">
-                      {price !== undefined ? `$${price.toFixed(2)}` : 'Price TBD'}
+                      {price !== undefined ? `£${price.toFixed(2)}` : 'Price TBD'}
                     </p>
                     <p className="text-sm text-gray-500">per person</p>
                   </div>
@@ -420,7 +420,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
                       onChange={(e) => handleQuantityInput(pkg.id, e.target.value)}
                       disabled={!available}
                       min="0"
-                      max={Math.min(maxGuests - totalGuests + quantity, availability.get(pkg.id)?.spotsAvailable || maxGuests)}
+                      max={Math.min(maxGuests - totalGuests + quantity, availability.get(pkg.id)?.availableQuantity || maxGuests)}
                       className="w-16 text-center border rounded px-2 py-1 disabled:opacity-50"
                       aria-label={`Quantity for ${pkg.name}`}
                       role="spinbutton"
@@ -472,7 +472,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
               {totalGuests} / {maxGuests} guests selected
             </span>
             <span className="text-xl font-semibold">
-              Total: ${calculateTotal() !== undefined ? calculateTotal().toFixed(2) : '0.00'}
+              Total: £{calculateTotal() !== undefined ? calculateTotal().toFixed(2) : '0.00'}
             </span>
           </div>
         </div>
