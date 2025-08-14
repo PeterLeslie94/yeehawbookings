@@ -37,7 +37,6 @@ interface SelectedPackage {
 
 interface PackageSelectionProps {
   selectedDate: string;
-  maxGuests: number;
   onNext: (packages: SelectedPackage[]) => void;
   onBack: () => void;
   initialPackages?: SelectedPackage[];
@@ -114,7 +113,6 @@ const PackageModal: React.FC<PackageModalProps> = ({ package: pkg, price, isOpen
 
 const PackageSelection: React.FC<PackageSelectionProps> = ({
   selectedDate,
-  maxGuests,
   onNext,
   onBack,
   initialPackages = [],
@@ -219,18 +217,11 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
     const currentQuantity = selectedPackages.get(packageId) || 0;
     const newQuantity = Math.max(0, currentQuantity + delta);
     
-    // Check availability
+    // Check availability (only limit by actual package availability)
     const pkgAvailability = availability.get(packageId);
     const maxAvailable = pkgAvailability ? pkgAvailability.availableQuantity : Infinity;
     
-    // Check max guests
-    const otherGuests = totalGuests - currentQuantity;
-    const maxAllowed = Math.min(
-      maxAvailable,
-      maxGuests - otherGuests
-    );
-    
-    const finalQuantity = Math.min(newQuantity, maxAllowed);
+    const finalQuantity = Math.min(newQuantity, maxAvailable);
     
     if (finalQuantity === 0) {
       const newMap = new Map(selectedPackages);
@@ -304,7 +295,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
     return percentAvailable < 0.2 && pkgAvailability.availableQuantity > 0;
   };
 
-  if (!selectedDate || maxGuests === undefined) {
+  if (!selectedDate) {
     return (
       <div className="flex items-center justify-center p-8">
         <p className="text-red-600">Invalid configuration</p>
@@ -420,7 +411,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
                       onChange={(e) => handleQuantityInput(pkg.id, e.target.value)}
                       disabled={!available}
                       min="0"
-                      max={Math.min(maxGuests - totalGuests + quantity, availability.get(pkg.id)?.availableQuantity || maxGuests)}
+                      max={availability.get(pkg.id)?.availableQuantity || 999}
                       className="w-16 text-center border rounded px-2 py-1 disabled:opacity-50"
                       aria-label={`Quantity for ${pkg.name}`}
                       role="spinbutton"
@@ -428,7 +419,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
                     
                     <button
                       onClick={() => handleQuantityChange(pkg.id, 1)}
-                      disabled={!available || totalGuests >= maxGuests}
+                      disabled={!available}
                       className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                       aria-label={`Increase quantity for ${pkg.name}`}
                     >
@@ -469,7 +460,7 @@ const PackageSelection: React.FC<PackageSelectionProps> = ({
         <div className="border-t pt-4 mb-6">
           <div className="flex justify-between items-center mb-2">
             <span className="text-gray-600">
-              {totalGuests} / {maxGuests} guests selected
+              {totalGuests} guests selected
             </span>
             <span className="text-xl font-semibold">
               Total: £{calculateTotal() !== undefined ? calculateTotal().toFixed(2) : '0.00'}

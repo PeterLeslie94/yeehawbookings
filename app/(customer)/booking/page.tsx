@@ -174,7 +174,6 @@ export default function BookingPage() {
         return selectedDate ? (
           <PackageSelection
             selectedDate={selectedDate.date}
-            maxGuests={50}
             onNext={handlePackageSelect}
             onBack={handleBack}
             initialPackages={selectedPackages}
